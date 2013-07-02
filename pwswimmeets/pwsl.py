@@ -3,7 +3,7 @@ import requests
 import re
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger()
 
 class SwimMeetServices(object):
 
@@ -133,5 +133,6 @@ class SwimMeetServices(object):
 
 
 if __name__ == '__main__':
-    pass
+    log.setLevel(logging.DEBUG)
+    log.addHandler(logging.StreamHandler())
     ## Put some test stuff in here
