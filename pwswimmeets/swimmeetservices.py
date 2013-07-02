@@ -132,4 +132,6 @@ class SwimMeetServices(object):
         return res
 
 
-
+if __name__ == '__main__':
+    pass
+    ## Put some test stuff in here
