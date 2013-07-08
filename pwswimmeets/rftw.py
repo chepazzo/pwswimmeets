@@ -7,7 +7,7 @@ import logging
 
 log = logging.getLogger()
 
-class RFTW(object):
+class SwimMeetServices(object):
 
     def __init__(self):
         self.url = 'http://www.reachforthewall.com/wp-content/themes/rftw/json.php'
@@ -87,7 +87,7 @@ class RFTW(object):
 if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
     log.addHandler(logging.StreamHandler())
-    s = RFTW()
+    s = SwimMeetServices()
     lname = 'bianc'
     print "Looking for swimmer by lname (%s)"%lname
     r = s.find_swimmer_by_lname(lname)

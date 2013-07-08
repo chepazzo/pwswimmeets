@@ -14,14 +14,62 @@ class SwimMeetServices(object):
         self.spwd = ''
         self.reporttypes = ['8','10','12','14','18','Free','IM','Back','Breast','Fly']
 
-    def find_swimmer_by_lname(self,slastname):
+    def find_swimmer_by_lname(self,slastname,exact=False):
+        '''
+        returns:
+        [ {'AthName': 'Phelps, Michael', 
+           'Sex': 'F', 
+           'AthNo': '1234', 
+           'AthTeamAbbr': 'VOSD', 
+           'DOB': None, 
+           'HistoryResults': None, 
+           'Age': None, 
+           'TeamNo': None, 
+           'Events': None}
+        ]
+        DOB, HistoryResults, Age, TeamNo, Events are always None
+        '''
         service = 'FindSwimmerByLName'
         data = {'sLastName':slastname}
         res = self._doit(service,data)
-        aths = [n for n in res if n['AthName'].lower().startswith(slastname.lower())]
+        if exact:
+            aths = [n for n in res if n['AthName'].lower() == slastname.lower()]
+        else:
+            aths = [n for n in res if n['AthName'].lower().startswith(slastname.lower())]
         return aths
 
     def get_athlete(self,athno=None,meetdb='SwimMeet',history='Yes'):
+        '''
+        returns:
+        {'Age': '99',
+         'AthName': 'Phelps, Michael',
+         'AthNo': '8066',
+         'AthTeamAbbr': 'VOSD',
+         'DOB': '6/7/2007',
+         'Events': '',
+         'Sex': 'F',
+         'TeamNo': '9999',
+         'HistoryResults': [
+            {
+             'History': [
+                {'DisplayTime': None,
+                 'FinTime': None,
+                 'MeetDate': '07-06-2013(BLST)'}
+             ],
+             'ResultType': 'Back'
+            },
+            {
+             'History': [
+                {'DisplayTime': None,
+                 'FinTime': None,
+                 'MeetDate': '07-06-2013(BLST)'}
+             ],
+             'ResultType': 'Breast'
+            }
+         ]
+        }
+        'Age' is never right.
+        '''
         ## Should note that setting history to 'No' gives a blank response
         ## {"AthNo":null,"AthName":null,etc}
         ## Setting history to anything else (even '') yields the full history result.
