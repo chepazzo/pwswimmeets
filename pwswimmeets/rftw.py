@@ -15,6 +15,30 @@ class SwimMeetServices(object):
         self.headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
     def get_swimmer_history(self,sid):
+        '''
+        returns:
+        [
+         {"team_name_link": "Virginia_Oaks_Sea_Devils",
+          "startdate": "July 6th, 2013",
+          "finish": "",
+          "seedtime": "",
+          "swimmer_name": "Phelps, Michael",
+          "season": "2013",
+          "swimresult": "1:22.87",
+          "eventname": "Girls 12 and Under 100 Free Relay",
+          "team_abbrev": "VOS",
+          "swimmer_id": "Phelps,Michael259350000",
+          "points": "",
+          "meet_id": "6319",
+          "swimmer_age": "12",
+          "league_abbrev": "PWSL ",
+          "league_name": "Prince William Swim League ",
+          "team_name": "Virginia Oaks Sea Devils",
+          "league_name_link": "Prince_William_Swim_League",
+          "hsclass": "",
+          "team_type": "Summer"}
+        ]
+        '''
         if sid is None:
             log.error("Must specify a swimmer id.")
             return None
@@ -23,6 +47,9 @@ class SwimMeetServices(object):
         return res
 
     def find_swimmer_history_by_lname(self,lname):
+        '''
+        returns same structure as get_swimmer_history
+        '''
         if lname is None:
             log.error("Must specify part of a name to search.")
             return None
@@ -34,6 +61,13 @@ class SwimMeetServices(object):
         return res
 
     def find_swimmer_by_lname(self,lname):
+        '''
+        returns:
+        [
+         {"link": "http://wiki.reachforthewall.com/Results_Statistics/Swimmer_Results?swimmerId=Phelps,Michael259350000",
+          "display": "Biancaniello, Abbica"}
+        ]
+        '''
         res = self._doit_swimsearch(lname)
         if res == None:
             return None
@@ -89,13 +123,15 @@ if __name__ == '__main__':
     log.addHandler(logging.StreamHandler())
     s = SwimMeetServices()
     lname = 'bianc'
-    print "Looking for swimmer by lname (%s)"%lname
+    print "find_swimmer_by_lname(%s)"%lname
     r = s.find_swimmer_by_lname(lname)
+    print json.dumps(r[0])
     if r is not None:
         for i in r:
             print '    '+i['display']
-    print "Looking for swimmer history by lname (%s)"%lname
+    print "find_swimmer_history_by_lname(%s)"%lname
     r = s.find_swimmer_history_by_lname(lname)
+    print json.dumps(r[0])
     if r is not None:
         print "    Found %s times!"%len(r)
 
