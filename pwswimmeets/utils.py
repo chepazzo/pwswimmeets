@@ -2,6 +2,7 @@
 import rftw
 import pwsl
 import logging
+import re
 
 log = logging.getLogger()
 
@@ -53,7 +54,32 @@ def update_swimmer_list():
 def get_best_time(name,event):
     pass
 
+def gen_event_list(meetdb='SwimMeetVOSD'):
+    s = pwsl.SwimMeetServices()
+    events = s.get_events(meetdb)
+    evdata = [ {'event_number':e['EventNumber'],'event_name':e['EventName'].strip()} for e in events ]
+    for e in evdata:
+        '''Boys 13-14 50 Meter Fly'''
+        ename = e['event_name']
+        m = re.search('(\w+) (\d+-\d+|8 & Under) (\d+) Meter (\w+)',ename,re.I)
+        if m is None:
+            log.error("%s not parseable"%ename)
+            continue
+        e['sex'] = m.group(1)
+        e['age'] = m.group(2)
+        e['dist'] = m.group(3)
+        e['stroke'] = m.group(4)
+    return evdata
+
 if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
     log.addHandler(logging.StreamHandler())
     get_data_for_chart('bianc')
+
+    '''
+import pwswimmeets
+from pprint import pprint as pp
+evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
+pp(evdata)
+    '''
+

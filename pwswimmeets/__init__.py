@@ -69,6 +69,4 @@ class Swimmer(object):
             # and see if the Sex, Age, DOB, or Team values differed, but 
             # I don't know what I would do with that info.
             results = s.get_athlete(athno)
-            for r in results:
-                    
         return self

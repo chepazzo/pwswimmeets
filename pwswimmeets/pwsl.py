@@ -10,7 +10,7 @@ class SwimMeetServices(object):
     def __init__(self):
         self.url = 'http://www.pwswimmeets.com/swimmeetservices.asmx'
         self.headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        self.saccessid = '912597'
+        self.saccessid = '912597'#929721 would this work: 895473
         self.spwd = ''
         self.reporttypes = ['8','10','12','14','18','Free','IM','Back','Breast','Fly']
 
@@ -95,6 +95,7 @@ class SwimMeetServices(object):
     def get_events(self,meetdb='SwimMeetVOSD'):
         ## Ok, so meetdb can't just be 'SwimMeet'
         ## It has to include a team abbrev like 'SwimMeetVOSD'
+        ## The abbrev is that of the home team.
         ## The output in each case is a list of events that includes 
         ## some data indicating if a record was broken in each event.
         service = 'GetEvents'
