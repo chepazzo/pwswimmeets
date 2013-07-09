@@ -54,21 +54,61 @@ def update_swimmer_list():
 def get_best_time(name,event):
     pass
 
+def gen_time_standards(csvfile=None):
+    '''
+    Need to get data from somewhere.
+    I created a csv from: http://www.pwcweb.com/makos/PWSL_2003_Time_Standards.htm
+    '''
+    if csvfile is None:
+        return None
+    import csv
+    import json
+    import re
+    d = csv.DictReader(open(csvfile,'rb'))
+    j = [row for row in d]
+    for e in j:
+        ename = e['event_name']
+        if ename.startswith('Male'):
+            e['sex'] = 'Male'
+        elif ename.startswith('Female'):
+            e['sex'] = 'Female'
+        m = re.search('(\w+) (\d+-\d+|8 & Under)',ename,re.I)
+        e['age'] = m.group(2)
+        sex = e['sex'].replace('Male','Boys').replace('Female','Girls')
+        e['event_name'] = "%s %s %s Meter %s"%(sex,e['age'],e['dist'],e['stroke'])
+        #sa = e['PWA']
+        #sb = e['PWB']
+        ta = [float(r) for r in reversed(e['PWA'].split(':'))]
+        if len(ta) > 0:
+            sa = ta[0]
+        if len(ta) > 1:
+            sa = float(sa) + int(ta[1])*60
+        tb = [float(r) for r in reversed(e['PWB'].split(':'))]
+        if len(tb) is not None:
+            sb = tb[0]
+        if len(tb) > 1:
+            sb = float(sb) + int(tb[1])*60
+        e['FinA'] = round(sa,2)
+        e['FinB'] = round(sb,2)
+    return j
+
 def gen_event_list(meetdb='SwimMeetVOSD'):
     s = pwsl.SwimMeetServices()
     events = s.get_events(meetdb)
     evdata = [ {'event_number':e['EventNumber'],'event_name':e['EventName'].strip()} for e in events ]
     for e in evdata:
-        '''Boys 13-14 50 Meter Fly'''
         ename = e['event_name']
-        m = re.search('(\w+) (\d+-\d+|8 & Under) (\d+) Meter (\w+)',ename,re.I)
+        m = re.search('(\w+) (\d+-\d+|\d+ & Under) (\d+) Meter (\w[\w\s]+)',ename,re.I)
         if m is None:
             log.error("%s not parseable"%ename)
             continue
-        e['sex'] = m.group(1)
-        e['age'] = m.group(2)
+        e['sex'] = m.group(1).replace('Boys','Male').replace('Girls','Female')
+        e['age'] = m.group(2).replace('10 & Under','9-10')
         e['dist'] = m.group(3)
         e['stroke'] = m.group(4)
+        if e['stroke'] == 'Medly':
+            e['stroke'] = 'IM'
+            e['event_name'] = e['event_name'].replace('Medly','IM').replace('10 & Under','9-10')
     return evdata
 
 if __name__ == '__main__':

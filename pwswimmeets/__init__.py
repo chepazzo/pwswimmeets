@@ -70,3 +70,13 @@ class Swimmer(object):
             # I don't know what I would do with that info.
             results = s.get_athlete(athno)
         return self
+
+if __name__ == '__main__':
+    settings.DATAFILES['TIMESTANDARDS'] = './data/timestandards.json'
+    settings.DATAFILES['EVENTS'] = './data/timestandards.json'
+    settings.DATAFILES['SWIMMERS'] = './data/timestandards.json'
+    import json
+    stand = json.load(open(settings.DATAFILES['TIMESTANDARDS'],'rb'))
+    s = stand[0]
+    print "%s %sm %s PWB:%s PWA:%s"%(s['Event'],s['Dist'],s['Stroke'],s['PWB'],s['PWA'])
+
