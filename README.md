@@ -7,6 +7,8 @@ This is meant to be a progromattic API to get at the Swim Meet data for Prince W
 
 See http://www.pwswimmeets.com/swimmeetservices.asmx for full cmd reference.
 
+See http://www.pwcweb.com/makos/PWSL_2003_Time_Standards.htm for PWA and PWB times.
+
 Examples
 --------
 (swimmers' names have been replaced with fake names)
