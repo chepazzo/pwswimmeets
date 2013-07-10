@@ -22,7 +22,6 @@ def get_data_for_chart(name):
     :param name:
         Searches based on name
         Hint:  if you send the string as "mylastname, myfirstname" it will still match
-    :param athno:
 
     :returns:
         something
@@ -37,7 +36,7 @@ def get_data_for_chart(name):
             continue
         if swimtime == 'NS':
             continue
-        fintime = time2secs(swimtime)
+        fintime = hms2secs(swimtime)
         mdate = h['startdate'].replace('st,',',').replace('nd,',',').replace('th,',',').replace('rd,',',')
         m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
         dist = m.group(3)
@@ -52,31 +51,39 @@ def get_data_for_chart(name):
         rows['data'][mdate][evt] = fintime
     return rows
 
-    s = pwsl.SwimMeetServices()
-    rows = {}
-    athletes = s.find_swimmer_by_lname(name)
-    athnos = [ r['AthNo'] for r in athletes ]
-    for athno in athnos:
-        print "athno: %s"%athno
-        res = s.get_athlete(athno)
-        for event in res['HistoryResults']:
-            evt = event['ResultType']
-            log.debug("evt: %s"%evt)
-            for h in event['History']:
-                datatime = h['FinTime']
-                mdate = h['MeetDate']
-                mdate = mdate[ 0 : mdate.rindex("(") ]
-                log.debug("    %s"%mdate)
-                if mdate not in rows:
-                    rows[mdate] = {}
-                rows[mdate][evt] = datatime
-    return rows
-
 def update_swimmer_list():
     pass
 
 def get_best_time(name,event):
     pass
+
+def get_best_times(name):
+    store = {}
+    r = rftw.SwimMeetServices()
+    events = r.find_swimmer_history_by_lname(name)
+    for h in events:
+        ename = h['eventname']
+        swimtime = h['swimresult']
+        if swimtime == 'DQ':
+            continue
+        if swimtime == 'NS':
+            continue
+        if swimtime == 'DNF':
+            continue
+        fintime = hms2secs(swimtime)
+        mdate = h['startdate'].replace('st,',',').replace('nd,',',').replace('th,',',').replace('rd,',',')
+        m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
+        dist = m.group(3)
+        stroke = m.group(4)
+        if stroke.endswith('Relay'):
+            continue
+        evt = "%s %s"%(dist,stroke)
+        if evt not in store:
+            store[evt] = {'times':[],'best':None}
+        store[evt]['times'].append(fintime)
+    for evt in store:
+        store[evt]['best'] = secs2hms(min(store[evt]['times']))
+    return [ {'event':evt,'besttime':store[evt]['best']} for evt in store ]
 
 def gen_time_standards(csvfile=None):
     '''
@@ -112,8 +119,8 @@ def gen_time_standards(csvfile=None):
         #    sb = float(sb) + int(tb[1])*60
         #e['FinA'] = round(sa,2)
         #e['FinB'] = round(sb,2)
-        e['FinA'] = time2secs(e['PWA'])
-        e['FinB'] = time2secs(e['PWB'])
+        e['FinA'] = hms2secs(e['PWA'])
+        e['FinB'] = hms2secs(e['PWB'])
     return j
 
 def gen_event_list(meetdb='SwimMeetVOSD'):
@@ -135,7 +142,7 @@ def gen_event_list(meetdb='SwimMeetVOSD'):
             e['event_name'] = e['event_name'].replace('Medley','IM').replace('10 & Under','9-10')
     return evdata
 
-def time2secs(hms=None):
+def hms2secs(hms=None):
     if hms is None:
         return None
     m = [float(r) for r in reversed(hms.split(':'))]
@@ -144,12 +151,18 @@ def time2secs(hms=None):
     if len(m) > 1:
         s = float(s) + int(m[1])*60
     return round(s,2)
-    
+
+def secs2hms(secs=None):
+    if secs is None:
+        return None
+    m,s = divmod(secs,60)
+    return "%d:%05.2f"%(m,round(s,2))
 
 if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
     log.addHandler(logging.StreamHandler())
-    get_data_for_chart('bianc')
+    #get_data_for_chart('bianc')
+    print get_best_times('biancaniello, abbica')
 
     '''
 import pwswimmeets
