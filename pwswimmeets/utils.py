@@ -27,6 +27,31 @@ def get_data_for_chart(name):
     :returns:
         something
     """
+    rows = {'events':[],'data':{}}
+    r = rftw.SwimMeetServices()
+    events = r.find_swimmer_history_by_lname(name)
+    for h in events:
+        ename = h['eventname']
+        swimtime = h['swimresult']
+        if swimtime == 'DQ':
+            continue
+        if swimtime == 'NS':
+            continue
+        fintime = time2secs(swimtime)
+        mdate = h['startdate'].replace('st,',',').replace('nd,',',').replace('th,',',').replace('rd,',',')
+        m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
+        dist = m.group(3)
+        stroke = m.group(4)
+        if stroke.endswith('Relay'):
+            continue
+        evt = "%s %s"%(dist,stroke)
+        if evt not in rows['events']:
+            rows['events'].append(evt)
+        if mdate not in rows['data']:
+            rows['data'][mdate] = {'date':mdate}
+        rows['data'][mdate][evt] = fintime
+    return rows
+
     s = pwsl.SwimMeetServices()
     rows = {}
     athletes = s.find_swimmer_by_lname(name)
@@ -45,7 +70,6 @@ def get_data_for_chart(name):
                 if mdate not in rows:
                     rows[mdate] = {}
                 rows[mdate][evt] = datatime
-    print rows
     return rows
 
 def update_swimmer_list():
@@ -76,20 +100,20 @@ def gen_time_standards(csvfile=None):
         e['age'] = m.group(2)
         sex = e['sex'].replace('Male','Boys').replace('Female','Girls')
         e['event_name'] = "%s %s %s Meter %s"%(sex,e['age'],e['dist'],e['stroke'])
-        #sa = e['PWA']
-        #sb = e['PWB']
-        ta = [float(r) for r in reversed(e['PWA'].split(':'))]
-        if len(ta) > 0:
-            sa = ta[0]
-        if len(ta) > 1:
-            sa = float(sa) + int(ta[1])*60
-        tb = [float(r) for r in reversed(e['PWB'].split(':'))]
-        if len(tb) is not None:
-            sb = tb[0]
-        if len(tb) > 1:
-            sb = float(sb) + int(tb[1])*60
-        e['FinA'] = round(sa,2)
-        e['FinB'] = round(sb,2)
+        #ta = [float(r) for r in reversed(e['PWA'].split(':'))]
+        #if len(ta) > 0:
+        #    sa = ta[0]
+        #if len(ta) > 1:
+        #    sa = float(sa) + int(ta[1])*60
+        #tb = [float(r) for r in reversed(e['PWB'].split(':'))]
+        #if len(tb) is not None:
+        #    sb = tb[0]
+        #if len(tb) > 1:
+        #    sb = float(sb) + int(tb[1])*60
+        #e['FinA'] = round(sa,2)
+        #e['FinB'] = round(sb,2)
+        e['FinA'] = time2secs(e['PWA'])
+        e['FinB'] = time2secs(e['PWB'])
     return j
 
 def gen_event_list(meetdb='SwimMeetVOSD'):
@@ -97,7 +121,7 @@ def gen_event_list(meetdb='SwimMeetVOSD'):
     events = s.get_events(meetdb)
     evdata = [ {'event_number':e['EventNumber'],'event_name':e['EventName'].strip()} for e in events ]
     for e in evdata:
-        ename = e['event_name']
+        ename = e['event_name'].replace('Medly','Medley')
         m = re.search('(\w+) (\d+-\d+|\d+ & Under) (\d+) Meter (\w[\w\s]+)',ename,re.I)
         if m is None:
             log.error("%s not parseable"%ename)
@@ -106,10 +130,21 @@ def gen_event_list(meetdb='SwimMeetVOSD'):
         e['age'] = m.group(2).replace('10 & Under','9-10')
         e['dist'] = m.group(3)
         e['stroke'] = m.group(4)
-        if e['stroke'] == 'Medly':
+        if e['stroke'] == 'Medley':
             e['stroke'] = 'IM'
-            e['event_name'] = e['event_name'].replace('Medly','IM').replace('10 & Under','9-10')
+            e['event_name'] = e['event_name'].replace('Medley','IM').replace('10 & Under','9-10')
     return evdata
+
+def time2secs(hms=None):
+    if hms is None:
+        return None
+    m = [float(r) for r in reversed(hms.split(':'))]
+    if len(m) > 0:
+        s = m[0]
+    if len(m) > 1:
+        s = float(s) + int(m[1])*60
+    return round(s,2)
+    
 
 if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
@@ -119,7 +154,8 @@ if __name__ == '__main__':
     '''
 import pwswimmeets
 from pprint import pprint as pp
-evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
+#evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
+evdata = pwswimmeets.utils.get_data_for_chart('biancaniello, abbica')
 pp(evdata)
     '''
 
