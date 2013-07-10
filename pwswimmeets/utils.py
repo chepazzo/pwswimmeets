@@ -3,6 +3,7 @@ import rftw
 import pwsl
 import logging
 import re
+import datetime
 
 log = logging.getLogger()
 
@@ -48,7 +49,7 @@ def get_data_for_chart(name):
             rows['events'].append(evt)
         if mdate not in rows['data']:
             rows['data'][mdate] = {'date':mdate}
-        rows['data'][mdate][evt] = fintime
+        rows['data'][mdate][evt] = {'fintime':fintime,'hmstime':swimtime}
     return rows
 
 def update_swimmer_list():
@@ -63,6 +64,7 @@ def get_best_times(name):
     events = r.find_swimmer_history_by_lname(name)
     for h in events:
         ename = h['eventname']
+        swimmername = h['swimmer_name']
         swimtime = h['swimresult']
         if swimtime == 'DQ':
             continue
@@ -79,11 +81,40 @@ def get_best_times(name):
             continue
         evt = "%s %s"%(dist,stroke)
         if evt not in store:
-            store[evt] = {'times':[],'best':None}
-        store[evt]['times'].append(fintime)
+            store[evt] = {'times':[],'res':{'name':swimmername,'event':evt}}
+        store[evt]['times'].append({'fintime':fintime,'date':mdate,'findate':datetime.datetime.strptime(mdate,'%B %d, %Y')})
     for evt in store:
-        store[evt]['best'] = secs2hms(min(store[evt]['times']))
-    return [ {'event':evt,'besttime':store[evt]['best']} for evt in store ]
+        resultstore = store[evt]['res']
+        season = datetime.date.today().year
+        ## Look for best time in event
+        fintimes = [ t['fintime'] for t in store[evt]['times'] ]
+        resultstore['best'] = secs2hms(min(fintimes))
+        ## Look for best time in event this season
+        sfintimes = [ t['fintime'] for t in store[evt]['times'] if t['findate'].year == season ]
+        resultstore['seasonbest'] = None
+        if len(sfintimes)>0:
+            resultstore['seasonbest'] =secs2hms(min(fintimes))
+        ## Look for most recent time for event
+        sortedtimes = sorted(store[evt]['times'],key=lambda x: x['findate'],reverse=True)
+        lasttime = sortedtimes[0]
+        resultstore['last'] = {'date':lasttime['date'],'fintime':lasttime['fintime']}
+        ## Look for penultimate time for event
+        ## (expected to be used for seed for 'lasttime')
+        prevtime = None
+        if len(sortedtimes) > 1:
+            #prevtime = sortedtimes[1]
+            prevtime = {'date':sortedtimes[1]['date'],'fintime':sortedtimes[1]['fintime']}
+        resultstore['prev'] = prevtime
+        ## Look for season seed time.
+        thisyeartimes = [ t for t in reversed(sortedtimes) if t['findate'].year == season ]
+        tyt = None
+        if len(thisyeartimes) > 0:
+            tyt = {'date':thisyeartimes[0]['date'],'fintime':thisyeartimes[0]['fintime']}
+        resultstore['seed'] = tyt
+        #print "%s: %s %s"%(evt,lasttime['date'],secs2hms(lasttime['fintime']))
+        #print "    %s"%tyt
+    return [ store[evt]['res'] for evt in store ]
+    #return [ {'name':swimmername,'event':evt,'besttime':store[evt]['best']} for evt in store ]
 
 def gen_time_standards(csvfile=None):
     '''
@@ -156,7 +187,15 @@ def secs2hms(secs=None):
     if secs is None:
         return None
     m,s = divmod(secs,60)
-    return "%d:%05.2f"%(m,round(s,2))
+    h,m = divmod(m,60)
+    s = round(s,2)
+    val = "%d:%02d:%05.2f"%(h,m,s)
+    if int(secs) < 60:
+        val = "%.2f"%s
+    elif int(secs) < 3600:
+        val = "%d:%05.2f"%(m,s)
+    return val
+    #return "%d:%05.2f"%(m,round(s,2))
 
 if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
@@ -168,7 +207,8 @@ if __name__ == '__main__':
 import pwswimmeets
 from pprint import pprint as pp
 #evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
-evdata = pwswimmeets.utils.get_data_for_chart('biancaniello, abbica')
+evdata = pwswimmeets.utils.get_best_times('biancaniello, abbica')
+#evdata = pwswimmeets.utils.get_data_for_chart('biancaniello, abbica')
 pp(evdata)
     '''
 
