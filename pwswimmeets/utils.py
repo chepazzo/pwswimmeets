@@ -2,9 +2,13 @@ import rftw
 import pwsl
 import logging
 import re
+import json
 import datetime
+from . import settings
 
 log = logging.getLogger()
+
+PWTIMES = None
 
 def get_data_for_chart(name):
     """
@@ -41,18 +45,39 @@ def get_data_for_chart(name):
             continue
         fintime = hms2secs(swimtime)
         mdate = h['startdate'].replace('st,',',').replace('nd,',',').replace('th,',',').replace('rd,',',')
-        m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
-        dist = m.group(3)
-        stroke = m.group(4)
+        #m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
+        #ename = ename.replace('10 and Under','9-10').replace('12 and Under','11-12').replace('14 and Under','13-14').replace('18 and Under','15-18')
+        #ename = ename.replace('I.M.','IM');
+        #ename = ename.replace('and Under','& Under');
+        #dist = m.group(3)
+        #stroke = m.group(4)
+        enametup = normalize_event_name(ename)
+        ename = enametup[0]
+        dist = enametup[3]
+        stroke = enametup[4]
         if stroke.endswith('Relay'):
             continue
         evt = "%s %s"%(dist,stroke)
+        PWT = get_pwtime(fintime,ename)
         if evt not in rows['events']:
             rows['events'].append(evt)
         if mdate not in rows['data']:
             rows['data'][mdate] = {'date':mdate}
-        rows['data'][mdate][evt] = {'fintime':fintime,'hmstime':swimtime}
+        rows['data'][mdate][evt] = {'fintime':fintime,'hmstime':swimtime,'PWT':PWT}
     return rows
+
+def normalize_event_name(ename):
+    m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
+    sex = m.group(1)
+    age = m.group(2)
+    dist = m.group(3)
+    stroke = m.group(4)
+    sex = sex.replace('Male','Boys').replace('Female','Girls')
+    age = age.replace('10 and Under','9-10').replace('12 and Under','11-12').replace('14 and Under','13-14').replace('18 and Under','15-18')
+    age = age.replace('and Under','& Under');
+    stroke = stroke.replace('I.M.','IM');
+    ename = "%s %s %s Meter %s"%(sex,age,dist,stroke)
+    return (ename,sex,age,dist,stroke)
 
 def update_swimmer_list():
     pass
@@ -123,6 +148,43 @@ def get_best_times(name):
     return [ store[evt]['res'] for evt in store ]
     #return [ {'name':swimmername,'event':evt,'besttime':store[evt]['best']} for evt in store ]
 
+def get_pwtime(ftime=None,event=None):
+    if ftime is None:
+        log.error("get_pwtime() requires a time to check")
+        return None
+    if event is None:
+        log.error("get_pwtime() requires an event name to check")
+        return None
+    pwtimes = get_time_standards()
+    for t in pwtimes:
+        if t['event_name'] != event:
+            continue
+        log.debug("Comparing %.2f to PWA:%.2f and PWB:%.2f"%(ftime,t['FinA'],t['FinB']))
+        if ftime <= t['FinA']:
+            log.debug('    PWA TIME!!!!!',event)
+            return 'A'
+        elif ftime <= t['FinB']:
+            log.debug('    PWB TIME!!!!!',event)
+            return 'B'
+        else:
+            return None 
+    log.error('get_pwtime(): event_name not found in time_standards')
+    return None
+
+def get_time_standards():
+    if PWTIMES is None:
+        load_time_standards()
+    return PWTIMES
+
+def load_time_standards():
+    global PWTIMES
+    tsfile = settings.DATAFILES['TIMESTANDARDS']
+    if tsfile is None:
+        log.error("get_time_standards() unable to find DATAFILES['TIMESTANDARDS']")
+        return None
+    PWTIMES = json.load(open(tsfile,'rb'))
+    return PWTIMES
+
 def gen_time_standards(csvfile=None):
     '''
     Need to get data from somewhere.
@@ -131,8 +193,6 @@ def gen_time_standards(csvfile=None):
     if csvfile is None:
         return None
     import csv
-    import json
-    import re
     d = csv.DictReader(open(csvfile,'rb'))
     j = [row for row in d]
     for e in j:

@@ -107,6 +107,10 @@
                 }
                 vtime = evobj[e]['fintime'];
                 ftime = evobj[e]['hmstime'];
+                pwtime = evobj[e]['PWT'];
+                if (pwtime) {
+                    ftime = "("+pwtime+") "+ftime;
+                }
                 row.push({'v':vtime,'f':ftime});
                 //row.push(evobj[e]);
             }
