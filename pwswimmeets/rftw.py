@@ -278,7 +278,7 @@ if __name__ == '__main__':
         for i in r:
             print '    '+i['display']
     print "find_swimmer_history_by_lname(%s)"%lname
-    r = s.find_swimmer_history_by_lname('biancaniello, abbica')
+    r = s.find_swimmer_history_by_lname('phelps, michael')
     print json.dumps(r[0])
     if r is not None:
         print "    Found %s times!"%len(r)
