@@ -37,6 +37,8 @@ def get_data_for_chart(name):
             continue
         if swimtime == 'NS':
             continue
+        if swimtime == 'DNF':
+            continue
         fintime = hms2secs(swimtime)
         mdate = h['startdate'].replace('st,',',').replace('nd,',',').replace('th,',',').replace('rd,',',')
         m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
@@ -206,12 +208,12 @@ if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
     log.addHandler(logging.StreamHandler())
     #get_data_for_chart('bianc')
-    print get_best_times('biancaniello, abbica')
+    print get_best_times('phelps, michael')
     '''
 import pwswimmeets
 from pprint import pprint as pp
 #evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
-evdata = pwswimmeets.utils.get_data_for_chart('biancaniello, abbica')
+evdata = pwswimmeets.utils.get_data_for_chart('phelps, michael')
 pp(evdata)
     '''
 
