@@ -88,33 +88,41 @@ def get_best_times(name):
         season = datetime.date.today().year
         ## Look for best time in event
         fintimes = [ t['fintime'] for t in store[evt]['times'] ]
-        resultstore['best'] = secs2hms(min(fintimes))
+        besttime = min(fintimes)
+        resultstore['best'] = {'fintime':besttime,'hmstime':secs2hms(besttime)}
         ## Look for best time in event this season
         sfintimes = [ t['fintime'] for t in store[evt]['times'] if t['findate'].year == season ]
         resultstore['seasonbest'] = None
         if len(sfintimes)>0:
-            resultstore['seasonbest'] =secs2hms(min(fintimes))
+            seasonbesttime = min(sfintimes)
+            resultstore['seasonbest'] ={'fintime':seasonbesttime,'hmstime':secs2hms(seasonbesttime)}
         ## Look for most recent time for event
         sortedtimes = sorted(store[evt]['times'],key=lambda x: x['findate'],reverse=True)
         lasttime = sortedtimes[0]
-        resultstore['last'] = {'date':lasttime['date'],'fintime':lasttime['fintime']}
+        lastfintime = lasttime['fintime']
+        resultstore['last'] = {'date':lasttime['date'],'fintime':lastfintime,'hmstime':secs2hms(lastfintime)}
         ## Look for penultimate time for event
         ## (expected to be used for seed for 'lasttime')
         prevtime = None
+        prevdate = None
         if len(sortedtimes) > 1:
             #prevtime = sortedtimes[1]
-            prevtime = {'date':sortedtimes[1]['date'],'fintime':sortedtimes[1]['fintime']}
-        resultstore['prev'] = prevtime
+            prevtime = sortedtimes[1]['fintime']
+            prevdate = sortedtimes[1]['date']
+        resultstore['prev'] = {'date':prevdate,'fintime':prevtime,'hmstime':secs2hms(prevtime)}
         ## Look for season seed time.
         thisyeartimes = [ t for t in reversed(sortedtimes) if t['findate'].year == season ]
-        tyt = None
+        thisyeartime = None
+        thisyeardate = None
         if len(thisyeartimes) > 0:
-            tyt = {'date':thisyeartimes[0]['date'],'fintime':thisyeartimes[0]['fintime']}
-        resultstore['seed'] = tyt
+            thisyeartime = thisyeartimes[0]['fintime']
+            thisyeardate = thisyeartimes[0]['date']
+        resultstore['seed'] = {'date':thisyeardate,'fintime':thisyeartime,'hmstime':secs2hms(thisyeartime)}
         #print "%s: %s %s"%(evt,lasttime['date'],secs2hms(lasttime['fintime']))
         #print "    %s"%tyt
     return [ store[evt]['res'] for evt in store ]
     #return [ {'name':swimmername,'event':evt,'besttime':store[evt]['best']} for evt in store ]
+
 
 def gen_time_standards(csvfile=None):
     '''
