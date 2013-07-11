@@ -1,4 +1,3 @@
-
 import rftw
 import pwsl
 import logging
@@ -23,6 +22,7 @@ def get_data_for_chart(name):
     :param name:
         Searches based on name
         Hint:  if you send the string as "mylastname, myfirstname" it will still match
+    :param athno:
 
     :returns:
         something
@@ -92,10 +92,10 @@ def get_best_times(name):
         resultstore['best'] = {'fintime':besttime,'hmstime':secs2hms(besttime)}
         ## Look for best time in event this season
         sfintimes = [ t['fintime'] for t in store[evt]['times'] if t['findate'].year == season ]
-        resultstore['seasonbest'] = None
+        seasonbesttime = None
         if len(sfintimes)>0:
             seasonbesttime = min(sfintimes)
-            resultstore['seasonbest'] ={'fintime':seasonbesttime,'hmstime':secs2hms(seasonbesttime)}
+        resultstore['seasonbest'] ={'fintime':seasonbesttime,'hmstime':secs2hms(seasonbesttime)}
         ## Look for most recent time for event
         sortedtimes = sorted(store[evt]['times'],key=lambda x: x['findate'],reverse=True)
         lasttime = sortedtimes[0]
@@ -118,11 +118,8 @@ def get_best_times(name):
             thisyeartime = thisyeartimes[0]['fintime']
             thisyeardate = thisyeartimes[0]['date']
         resultstore['seed'] = {'date':thisyeardate,'fintime':thisyeartime,'hmstime':secs2hms(thisyeartime)}
-        #print "%s: %s %s"%(evt,lasttime['date'],secs2hms(lasttime['fintime']))
-        #print "    %s"%tyt
     return [ store[evt]['res'] for evt in store ]
     #return [ {'name':swimmername,'event':evt,'besttime':store[evt]['best']} for evt in store ]
-
 
 def gen_time_standards(csvfile=None):
     '''
@@ -210,13 +207,11 @@ if __name__ == '__main__':
     log.addHandler(logging.StreamHandler())
     #get_data_for_chart('bianc')
     print get_best_times('biancaniello, abbica')
-
     '''
 import pwswimmeets
 from pprint import pprint as pp
 #evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
-evdata = pwswimmeets.utils.get_best_times('biancaniello, abbica')
-#evdata = pwswimmeets.utils.get_data_for_chart('biancaniello, abbica')
+evdata = pwswimmeets.utils.get_data_for_chart('biancaniello, abbica')
 pp(evdata)
     '''
 
