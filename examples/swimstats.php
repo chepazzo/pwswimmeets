@@ -73,17 +73,28 @@
                     improved = improved.toFixed(2);
                 }
             }
-            row.push(eobj['best']['hmstime']);
-            row.push(eobj['last']['hmstime']);
-            row.push(eobj['prev']['hmstime']);
-            row.push(eobj['seed']['hmstime']);
-            row.push(changed);
-            row.push(improved);
+            bestf = null;
+            lastf = null;
+            prevf = null;
+            seedf = null;
+            changef = null;
+            improvedf = null;
+            if (best) { bestf = {'f':eobj['best']['hmstime'],'v':eobj['best']['fintime']}; }
+            if (last) { lastf = {'f':eobj['last']['hmstime'],'v':eobj['last']['fintime']}; }
+            if (prev) { prevf = {'f':eobj['prev']['hmstime'],'v':eobj['prev']['fintime']}; }
+            if (seed) { seedf = {'f':eobj['seed']['hmstime'],'v':eobj['seed']['fintime']}; }
+            if (changed) { changedf = {'f':changed,'v':parseFloat(changed)}; }
+            if (improved) { improvedf = {'f':improved,'v':parseFloat(improved)}; }
+            row.push(bestf);
+            row.push(lastf);
+            row.push(prevf);
+            row.push(seedf);
+            row.push(changedf);
+            row.push(improvedf);
             besttimes.data.push(row);
         }
         drawTimesTable();
     }
-
     function gotChartData(obj) {
         loaded.chartdata = true;
         dataobj = [];
