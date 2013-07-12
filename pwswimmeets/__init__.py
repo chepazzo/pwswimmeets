@@ -26,25 +26,34 @@ import re
 __all__ = ['pwsl','rftw','utils','settings']
 
 class Swimmer(object):
+    '''
+    Am expecting to get most of this info from rftw.get_meet()
+    which returns complete results for a single meet.
+    '''
+    SWIMMERS = []
     def __init__(self,name):
-        names = re.split(',',name)
+        if len([a for a in Swimmer.SWIMMERS if a.name == name]) == 0:
+            Swimmer.SWIMMERS.append(self)
+        names = re.split(',\s?',name)
         self.name = name
         self.lname = names[0]
         self.fname = names[1]
         # PWSL
         self.pwsl_ids = []
-        self.sex = None
         self.dob = None
         self.pwsl_team_abbrev = None #AthTeamAbbr
         # RFTW
-        self.rftw_ids = []
+        self.rftw_ids = [] # swimmer_id
+        self.sex = None # swimmer_gender
         self.age = None # swimmer_age
         self.team = None
+        self.team_id = None # team_id
         self.rftw_team_abbrev = None #team_abbrev
         self.start_date = None
         self.team_name = None
         self.times = {}
         self.add_swimmer(name)
+        Swimmer.SWIMMERS.append(self)
 
     def get_event_info(self,name):
         '''
@@ -56,10 +65,9 @@ class Swimmer(object):
           seed_time
           finish (placed)
           swimresult (final time)
-        PWSL:
-          DisplayTime
+          meet_date
+        CALCULATED:
           FinTime (time in sec.  used for sorting)
-          MeetDate
         '''
 
     def add_swimmer_from_api(self,name):
@@ -79,6 +87,10 @@ class Swimmer(object):
             # I don't know what I would do with that info.
             results = s.get_athlete(athno)
         return self
+
+    ## Class Methods ##
+    def get_swimmers_by_name(name):
+        return [a for a in Swimmer.SWIMMERS if a.name == name]
 
 if __name__ == '__main__':
     settings.DATAFILES['TIMESTANDARDS'] = './data/timestandards.json'
