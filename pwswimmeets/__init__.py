@@ -1,12 +1,21 @@
 '''
 pwswimmeets is a python implementation of the various APIs available to gather 
 swim meet results in Prince William County, Virginia.
+
+This package simplifies the collection of data from reachthewall.com and pwswimmeets.com.
+
+See http://www.pwswimmeets.com/swimmeetservices.asmx for full pwsm cmd reference.
+
+cmd ref for reachthewall.com has been pieced together with the help of FireBug while browsing the site.
 '''
+
+
 __version__ = '0.0.1'
 __author__ = 'Mike Biacaniello'
 __maintainer__ = 'Mike Biacaniello'
 __email__ = 'chepazzo@gmail.com'
-
+__url__ = 'https://github.com/chepazzo/pwswimmeets'
+__shortdesc__ = 'API for swimmer data for Prince William County, Virginia.'
 import pwsl
 import rftw
 import utils

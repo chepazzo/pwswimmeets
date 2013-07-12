@@ -12,12 +12,17 @@ import unittest
 from pwswimmeets import __version__
 from pwswimmeets import __author__
 from pwswimmeets import __maintainer__
+from pwswimmeets import __url__
 from pwswimmeets import __email__
 from pwswimmeets import __doc__
+from pwswimmeets import __shortdesc__
 
+desc = __shortdesc__
+long_desc = __doc__
 
 # Names of required packages
 requires = [
+    'requests'
 ]
 
 class CleanCommand(Command):
@@ -30,27 +35,23 @@ class CleanCommand(Command):
         assert os.getcwd() == self.cwd, 'Must be in package root: %s' % self.cwd
         os.system ('rm -rf ./build ./dist ./*.pyc ./*.tgz ./*.egg-info')
 
-desc = ''
-long_desc = '''
-'''
-
 setup(
     name='pwswimmeets',
+    url=__url__,
     version=__version__,
     author=__author__,
     author_email=__email__,
     packages=find_packages(exclude=['tests']),
     license='',
-    url='',
     description=desc,
     long_description=long_desc,
     scripts=[],
-    include_package_data=True,
+    #data_files=[('data', ['data/events.json', 'data/timestandards.json'])],
+    package_data={'pwswimmeets': ['data/*.json']},
+    #include_package_data=True,
     install_requires=requires,
     keywords = [
         'swim'
-    ],
-    classifiers = [
     ],
     cmdclass={
         'clean': CleanCommand
