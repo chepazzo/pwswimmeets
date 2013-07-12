@@ -68,13 +68,17 @@ def get_data_for_chart(name):
 
 def normalize_event_name(ename):
     m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
+    if m is None:
+        log.error("normalize_event_name('%s'): regex not working"%ename)
+        return (None,None,None,None,None)
     sex = m.group(1)
     age = m.group(2)
     dist = m.group(3)
     stroke = m.group(4)
     sex = sex.replace('Male','Boys').replace('Female','Girls')
-    age = age.replace('10 and Under','9-10').replace('12 and Under','11-12').replace('14 and Under','13-14').replace('18 and Under','15-18')
-    age = age.replace('and Under','& Under');
+    if age is not None:
+        age = age.replace('10 and Under','9-10').replace('12 and Under','11-12').replace('14 and Under','13-14').replace('18 and Under','15-18')
+        age = age.replace('and Under','& Under');
     stroke = stroke.replace('I.M.','IM');
     ename = "%s %s %s Meter %s"%(sex,age,dist,stroke)
     return (ename,sex,age,dist,stroke)
@@ -101,9 +105,13 @@ def get_best_times(name):
             continue
         fintime = hms2secs(swimtime)
         mdate = h['startdate'].replace('st,',',').replace('nd,',',').replace('th,',',').replace('rd,',',')
-        m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
-        dist = m.group(3)
-        stroke = m.group(4)
+        #m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
+        #dist = m.group(3)
+        #stroke = m.group(4)
+        enametup = normalize_event_name(ename)
+        ename = enametup[0]
+        dist = enametup[3]
+        stroke = enametup[4]
         if stroke.endswith('Relay'):
             continue
         evt = "%s %s"%(dist,stroke)
