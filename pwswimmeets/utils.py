@@ -2,6 +2,7 @@ import rftw
 import pwsl
 import logging
 import re
+import os
 import json
 import datetime
 from . import settings
@@ -186,9 +187,9 @@ def get_time_standards():
 
 def load_time_standards():
     global PWTIMES
-    tsfile = settings.DATAFILES['TIMESTANDARDS']
+    tsfile = os.path.join(settings.DATAFILEPATH,settings.DATAFILES['TIMESTANDARDS'])
     if tsfile is None:
-        log.error("get_time_standards() unable to find DATAFILES['TIMESTANDARDS']")
+        log.error("get_time_standards() unable to find DATAFILES['TIMESTANDARDS'] in %s"%tsfile)
         return None
     PWTIMES = json.load(open(tsfile,'rb'))
     return PWTIMES
