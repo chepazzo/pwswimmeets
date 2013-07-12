@@ -68,7 +68,7 @@ def get_data_for_chart(name):
     return rows
 
 def normalize_event_name(ename):
-    m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
+    m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under)?\s?(\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
     if m is None:
         log.error("normalize_event_name('%s'): regex not working"%ename)
         return (None,None,None,None,None)
