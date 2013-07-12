@@ -7,6 +7,7 @@ import glob
 import os
 import sys
 import unittest
+from glob import glob
 
 # Get version from pkg index
 from pwswimmeets import __version__
@@ -16,6 +17,7 @@ from pwswimmeets import __url__
 from pwswimmeets import __email__
 from pwswimmeets import __doc__
 from pwswimmeets import __shortdesc__
+from pwswimmeets import __name__ as __packagename__
 
 desc = __shortdesc__
 long_desc = __doc__
@@ -36,7 +38,7 @@ class CleanCommand(Command):
         os.system ('rm -rf ./build ./dist ./*.pyc ./*.tgz ./*.egg-info')
 
 setup(
-    name='pwswimmeets',
+    name=__packagename__,
     url=__url__,
     version=__version__,
     author=__author__,
@@ -46,8 +48,8 @@ setup(
     description=desc,
     long_description=long_desc,
     scripts=[],
-    #data_files=[('data', ['data/events.json', 'data/timestandards.json'])],
-    package_data={'pwswimmeets': ['data/*.json']},
+    data_files=[(__packagename__+'/examples', glob('examples/*'))],
+    package_data={__packagename__: ['data/*.json']},
     #include_package_data=True,
     install_requires=requires,
     keywords = [
