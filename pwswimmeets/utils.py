@@ -98,6 +98,7 @@ def get_best_times(name):
         ename = h['eventname']
         swimmername = h['swimmer_name']
         swimtime = h['swimresult']
+        seedtime = h['seedtime']
         if swimtime == 'DQ':
             continue
         if swimtime == 'NS':
@@ -105,6 +106,7 @@ def get_best_times(name):
         if swimtime == 'DNF':
             continue
         fintime = hms2secs(swimtime)
+        finseedtime = hms2secs(seedtime)
         mdate = h['startdate'].replace('st,',',').replace('nd,',',').replace('th,',',').replace('rd,',',')
         #m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
         #dist = m.group(3)
@@ -118,7 +120,7 @@ def get_best_times(name):
         evt = "%s %s"%(dist,stroke)
         if evt not in store:
             store[evt] = {'times':[],'res':{'name':swimmername,'event':evt}}
-        store[evt]['times'].append({'fintime':fintime,'date':mdate,'findate':datetime.datetime.strptime(mdate,'%B %d, %Y')})
+        store[evt]['times'].append({'finseedtime':finseedtime,'fintime':fintime,'date':mdate,'findate':datetime.datetime.strptime(mdate,'%B %d, %Y')})
     for evt in store:
         resultstore = store[evt]['res']
         season = datetime.date.today().year
@@ -143,8 +145,9 @@ def get_best_times(name):
         prevdate = None
         if len(sortedtimes) > 1:
             #prevtime = sortedtimes[1]
-            prevtime = sortedtimes[1]['fintime']
-            prevdate = sortedtimes[1]['date']
+            #prevtime = sortedtimes[1]['fintime']
+            #prevdate = sortedtimes[1]['date']
+            prevtime = sortedtimes[0]['finseedtime']
         resultstore['prev'] = {'date':prevdate,'fintime':prevtime,'hmstime':secs2hms(prevtime)}
         ## Look for season seed time.
         thisyeartimes = [ t for t in reversed(sortedtimes) if t['findate'].year == season ]
@@ -251,6 +254,9 @@ def gen_event_list(meetdb='SwimMeetVOSD'):
 
 def hms2secs(hms=None):
     if hms is None:
+        return None
+    if not re.match('^[\d\:\.]+$',hms):
+        log.error("'%s' not in h:m:s format"%hms)
         return None
     m = [float(r) for r in reversed(hms.split(':'))]
     if len(m) > 0:
