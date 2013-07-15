@@ -5,6 +5,7 @@ import re
 import os
 import json
 import datetime
+from dateutil import parser as parsedate
 from . import settings
 
 log = logging.getLogger()
@@ -162,6 +163,24 @@ def get_best_times(name):
         resultstore['seed'] = {'date':thisyeardate,'fintime':thisyeartime,'hmstime':secs2hms(thisyeartime)}
     return [ store[evt]['res'] for evt in store ]
     #return [ {'name':swimmername,'event':evt,'besttime':store[evt]['best']} for evt in store ]
+
+def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None):
+    if season is None:
+        season = datetime.datetime.today().year
+    ret = []
+    r = rftw.SwimMeetServices()
+    res = r.get_meet_results(season=season)
+    for m in res:
+        if meet_date is not None and parsedate.parse(m['meet_date']) != parsedate.parse(meet_date):
+            continue
+        if team_abbrev is not None:
+            if len([ t for t in m['teams'] if t['team_abbrev'] == team_abbrev ]) < 1:
+                continue
+        if team_name is not None:
+            if len([ t for t in m['teams'] if re.search(team_name,t['team_name'],re.I) ]) < 1:
+                continue
+        ret.append(m)
+    return ret
 
 def get_pwtime(ftime=None,event=None):
     if ftime is None:
