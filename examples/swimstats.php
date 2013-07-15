@@ -25,17 +25,18 @@
     var loaded = { 'googlechart':false,'chartdata':false,'besttimes':false };
     var chartdata = [];
     var charthead = [];
-    var besttimes = {'data':[],'head':['Best','Last','Prev','Seed','Meet Improved','Year Improved']};
+    var besttimes = {'data':[],'head':['Best Ever','Most Recent','Most Recent Seed','Season Seed','Meet Improved','Year Improved']};
 
     function INIT() {
         initTabs();
         google.load("visualization", "1", {packages:["corechart","table"]});
         google.setOnLoadCallback(function(){loadData();});
-        console.log('sending /cgi-bin/getchartdata.py?name='+name);
     }
 
     function loadData() {
+        console.log('sending /cgi-bin/getchartdata.py?name='+name);
         getJSON('/cgi-bin/getchartdata.py','name='+name,gotChartData);
+        console.log('sending /cgi-bin/getbesttimedata.py?name='+name);
         getJSON('/cgi-bin/getbesttimedata.py','name='+name,gotBestTimes);
     }
 
@@ -50,19 +51,19 @@
 
     function gotBestTimes(obj) {
         loaded.besttimes = true;
-        dataobjsort = obj.sort(eventsort);
+        var dataobjsort = obj.sort(eventsort);
         for (var e in dataobjsort) {
-            eobj = dataobjsort[e];
-            row = [eobj['event']];
-            yearbest = eobj['seasonbest']['fintime'];
-            best = eobj['best']['fintime'];
-            last = eobj['last']['fintime'];
-            prev = eobj['prev']['fintime'];
-            seed = eobj['seed']['fintime'];
-            changed = null;
-            improved = null;
-            lastdate = new Date(eobj['last']['date']);
-            today = new Date();
+            var eobj = dataobjsort[e];
+            var row = [eobj['event']];
+            var yearbest = eobj['seasonbest']['fintime'];
+            var best = eobj['best']['fintime'];
+            var last = eobj['last']['fintime'];
+            var prev = eobj['prev']['fintime'];
+            var seed = eobj['seed']['fintime'];
+            var changed = null;
+            var improved = null;
+            var lastdate = new Date(eobj['last']['date']);
+            var today = new Date();
             if (lastdate.getFullYear() == today.getFullYear()) {
                 if (prev) {
                     changed = prev - last;
@@ -73,12 +74,12 @@
                     improved = improved.toFixed(2);
                 }
             }
-            bestf = null;
-            lastf = null;
-            prevf = null;
-            seedf = null;
-            changef = null;
-            improvedf = null;
+            var bestf = null;
+            var lastf = null;
+            var prevf = null;
+            var seedf = null;
+            var changedf = null;
+            var improvedf = null;
             if (best) { bestf = {'f':eobj['best']['hmstime'],'v':eobj['best']['fintime']}; }
             if (last) { lastf = {'f':eobj['last']['hmstime'],'v':eobj['last']['fintime']}; }
             if (prev) { prevf = {'f':eobj['prev']['hmstime'],'v':eobj['prev']['fintime']}; }
@@ -97,28 +98,27 @@
     }
     function gotChartData(obj) {
         loaded.chartdata = true;
-        dataobj = [];
+        var dataobj = [];
         for (var d in obj['data']) { dataobj.push(obj.data[d]); }
         for (var d in obj['events']) { charthead.push(obj.events[d]); }
-        dataobjsort = dataobj.sort(datesort);
+        var dataobjsort = dataobj.sort(datesort);
         //console.log(dataobjsort);
         for (var d in dataobjsort) {
         //for (var d=0;d<keys.length; d++) {
             //console.log(dataobjsort[d]);
-            evobj = dataobjsort[d];
-            console.log('  srt: '+evobj['date']);
+            var evobj = dataobjsort[d];
             if (typeof(evobj['date']) == 'undefined') { continue; }
-            row = [evobj['date']]
+            var row = [evobj['date']]
             for (var i=0;i<charthead.length; i++) {
-                e = charthead[i];
+                var e = charthead[i];
                 //console.log(e);
                 if (typeof(evobj[e]) == 'undefined') {
                     row.push(null);
                     continue;
                 }
-                vtime = evobj[e]['fintime'];
-                ftime = evobj[e]['hmstime'];
-                pwtime = evobj[e]['PWT'];
+                var vtime = evobj[e]['fintime'];
+                var ftime = evobj[e]['hmstime'];
+                var pwtime = evobj[e]['PWT'];
                 if (pwtime) {
                     ftime = "("+pwtime+") "+ftime;
                 }
@@ -128,7 +128,7 @@
             //row = [evobj['date'],evobj.IM,evobj.Back,evobj.Breast,evobj.Fly,evobj.Free];
             chartdata.push(row);
         }
-        for (var d in dataobj) { console.log('nosrt: '+dataobj[d]['date']); }
+        //for (var d in dataobj) { console.log('nosrt: '+dataobj[d]['date']); }
         //console.log(chartdata);
         drawChart()
         drawHistoryTable()
@@ -139,7 +139,7 @@
         var dataTable = new google.visualization.DataTable();
         dataTable.addColumn('string', 'Date');
         for (var i=0;i<charthead.length; i++) {
-            stroke = charthead[i];
+            var stroke = charthead[i];
             dataTable.addColumn('number', stroke)
         }
         for (i=0;i<chartdata.length;i++) {
@@ -162,7 +162,7 @@
         var dataTable = new google.visualization.DataTable();
         dataTable.addColumn('string', 'Date');
         for (var i=0;i<charthead.length; i++) {
-            stroke = charthead[i];
+            var stroke = charthead[i];
             dataTable.addColumn('number', stroke)
         }
         for (i=0;i<chartdata.length;i++) {
@@ -189,7 +189,7 @@
         dataTable.addColumn('string', 'Stroke');
         for (var i=0;i<besttimes.head.length; i++) {
             header = besttimes.head[i];
-            dataTable.addColumn('string', header)
+            dataTable.addColumn('number', header)
         }
         //dataTable.addColumn('number', 'Best');
         //dataTable.addColumn('number', 'Last');
