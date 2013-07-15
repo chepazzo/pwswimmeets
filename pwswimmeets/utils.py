@@ -38,12 +38,12 @@ def get_data_for_chart(name):
     for h in events:
         ename = h['eventname']
         swimtime = h['swimresult']
-        if swimtime == 'DQ':
-            continue
-        if swimtime == 'NS':
-            continue
-        if swimtime == 'DNF':
-            continue
+        #if swimtime == 'DQ':
+        #    continue
+        #if swimtime == 'NS':
+        #    continue
+        #if swimtime == 'DNF':
+        #    continue
         fintime = hms2secs(swimtime)
         mdate = h['startdate'].replace('st,',',').replace('nd,',',').replace('th,',',').replace('rd,',',')
         #m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under) (\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
@@ -99,12 +99,12 @@ def get_best_times(name):
         swimmername = h['swimmer_name']
         swimtime = h['swimresult']
         seedtime = h['seedtime']
-        if swimtime == 'DQ':
-            continue
-        if swimtime == 'NS':
-            continue
-        if swimtime == 'DNF':
-            continue
+        #if swimtime == 'DQ':
+        #    continue
+        #if swimtime == 'NS':
+        #    continue
+        #if swimtime == 'DNF':
+        #    continue
         fintime = hms2secs(swimtime)
         finseedtime = hms2secs(seedtime)
         mdate = h['startdate'].replace('st,',',').replace('nd,',',').replace('th,',',').replace('rd,',',')
@@ -125,11 +125,13 @@ def get_best_times(name):
         resultstore = store[evt]['res']
         season = datetime.date.today().year
         ## Look for best time in event
-        fintimes = [ t['fintime'] for t in store[evt]['times'] ]
-        besttime = min(fintimes)
+        fintimes = [ t['fintime'] for t in store[evt]['times'] if t['fintime'] is not None ]
+        besttime = None
+        if len(fintimes)>0:
+            besttime = min(fintimes)
         resultstore['best'] = {'fintime':besttime,'hmstime':secs2hms(besttime)}
         ## Look for best time in event this season
-        sfintimes = [ t['fintime'] for t in store[evt]['times'] if t['findate'].year == season ]
+        sfintimes = [ t['fintime'] for t in store[evt]['times'] if t['findate'].year == season and t['fintime'] is not None ]
         seasonbesttime = None
         if len(sfintimes)>0:
             seasonbesttime = min(sfintimes)
@@ -143,11 +145,12 @@ def get_best_times(name):
         ## (expected to be used for seed for 'lasttime')
         prevtime = None
         prevdate = None
-        if len(sortedtimes) > 1:
-            #prevtime = sortedtimes[1]
-            #prevtime = sortedtimes[1]['fintime']
-            #prevdate = sortedtimes[1]['date']
-            prevtime = sortedtimes[0]['finseedtime']
+        #if len(sortedtimes) > 1:
+        #    #prevtime = sortedtimes[1]
+        #    prevtime = sortedtimes[1]['fintime']
+        #    prevdate = sortedtimes[1]['date']
+        #if sortedtimes[0]['finseedtime'] is not None:
+        prevtime = sortedtimes[0]['finseedtime']
         resultstore['prev'] = {'date':prevdate,'fintime':prevtime,'hmstime':secs2hms(prevtime)}
         ## Look for season seed time.
         thisyeartimes = [ t for t in reversed(sortedtimes) if t['findate'].year == season ]
