@@ -200,9 +200,7 @@ class SwimMeetServices(object):
         if meetid is None:
             log.error('get_meet() requires a meetid.')
             return None
-        if season is None:
-            season = datetime.datetime.today().year
-        data = {'meetid':meetid,'result':result}
+        data = {'meetId':meetid,'result':result}
         res = self._doit(controller,data=data)
         if res is None:
             log.error("get_meet(meetid='%s',result='%s') yielded no data."%(meetid,result))
