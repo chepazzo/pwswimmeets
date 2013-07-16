@@ -29,6 +29,36 @@ class Swimmer(object):
     '''
     Am expecting to get most of this info from rftw.get_meet()
     which returns complete results for a single meet.
+
+    {
+     'name':'',     # rftw.get_meet().indswims[].swimmers[].swimmer_name
+     'rftw_ids':[], # rftw.get_meet().indswims[].swimmers[].swimmer_id
+     'sex':'',      # rftw.get_meet().indswims[].swimmers[].swimmer_gender
+     'team_ids':[{'id':'','source':'rftw'}],         # rftw.get_meet().indswims[].swimmers[].team_id
+     'team_abbrevs':[{'abbrev':'','source':'rftw'}], # rftw.get_meet().indswims[].swimmers[].team_abbrev
+     'times':{
+        '25 fly':{
+             ## should these just ref the history index?
+            'best':'',             # calc'd: self.best_time()
+            'seasonbest':'',       # calc'd: self.seasibbest_time()
+            'recent':'',           # calc'd: self.recent_time()
+            'stroke':'',           # utils.normalize_event_name(rftw.get_meet().indswims[].eventname)[3,4]
+            'history':[{
+                'event_name':'',   # utils.normalize_event_name(rftw.get_meet().indswims[].eventname)[0]
+                'event_num':'',    # rftw.get_meet().indswims[].eventnum
+                'meet_id':'',      # rftw.get_meet().meet_id
+                'season':'',       # rftw.get_meet().season
+                'date':'',         # rftw.get_meet().meet_date
+                'hmstime':'',      # rftw.get_meet().indswims[].swimmers[].swimresult
+                'fintime':'',      # rftw.get_meet().indswims[].swimmers[].swimtime_sort
+                'hmsseedtime':'',  # rftw.get_meet().indswims[].swimmers[].seedtime
+                'points':'',       # rftw.get_meet().indswims[].swimmers[].points
+                'place':'',        # rftw.get_meet().indswims[].swimmers[].finish
+                'PWT':''           # calc'd from utils.get_pwtime(fintime,event_name)
+            }]
+        }
+     }
+    }
     '''
     SWIMMERS = []
     def __init__(self,name):
@@ -52,8 +82,30 @@ class Swimmer(object):
         self.start_date = None
         self.team_name = None
         self.times = {}
-        self.add_swimmer(name)
-        Swimmer.SWIMMERS.append(self)
+        #self.add_swimmer(name)
+        #Swimmer.SWIMMERS.append(self)
+
+    def best_time(self,stroke):
+        history = self.times[stroke]['history']
+        btime = min(history, key=lambda x:x['fintime'])
+        return btime
+
+    def seasonbest_time(self,stroke):
+        history = self.times[stroke]['history']
+        season = datetime.datetime.today().year
+        btime = min([h for h in history if h['season'] == season], key=lambda x:x['fintime'])
+        return btime
+
+    def last_time(self,stroke):
+        history = self.times[stroke]['history']
+        btime = sorted([h for h in history],key=lambda x:parsedate.parse(x['date']),reverse=True)[0]
+        return btime
+
+    def season_seed(self,stroke):
+        history = self.times[stroke]['history']
+        season = datetime.datetime.today().year
+        firsttime = sorted([h for h in history if h['season'] == season],key=lambda x:parsedate.parse(x['date']))[0]
+        return btime
 
     def get_event_info(self,name):
         '''
