@@ -166,7 +166,10 @@ def get_best_times(name):
 
 def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None):
     if season is None:
-        season = datetime.datetime.today().year
+        if meet_date is not None:
+            season = parsedate.parse(meet_date).year
+        else:
+            season = datetime.datetime.today().year
     ret = []
     r = rftw.SwimMeetServices()
     res = r.get_meet_results(season=season)
@@ -181,6 +184,10 @@ def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None
                 continue
         ret.append(m)
     return ret
+
+def find_meet_ids(*args,**kwargs):
+    meets = find_meet_results(*args,**kwargs)
+    return [{'id':m['meet_id'],'date':m['meet_date']} for m in sorted(meets,key=lambda x: parsedate.parse(x['meet_date']),reverse=True)]
 
 def get_pwtime(ftime=None,event=None):
     if ftime is None:
