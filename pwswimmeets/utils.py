@@ -69,6 +69,8 @@ def get_data_for_chart(name):
     return rows
 
 def normalize_event_name(ename):
+    if ename is None:
+        return (None,None,None,None,None)
     m = re.search('(\w+) (\d+-\d+|\d+ & Under|\d+ and Under)?\s?(\d+)(?: Meter)? (\w[\w\.\s]+)',ename,re.I)
     if m is None:
         log.error("normalize_event_name('%s'): regex not working"%ename)
@@ -186,30 +188,38 @@ def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None
     return ret
 
 def find_meet_ids(*args,**kwargs):
+    '''
+    params: 
+        team_name=None,
+        team_abbrev=None,
+        season=None,
+        meet_date=None
+    '''
     meets = find_meet_results(*args,**kwargs)
-    return [{'id':m['meet_id'],'date':m['meet_date']} for m in sorted(meets,key=lambda x: parsedate.parse(x['meet_date']),reverse=True)]
+    sortedmeets = sorted(meets,key=lambda x: parsedate.parse(x['meet_date']),reverse=True)
+    return [ {'id':m['meet_id'],'date':m['meet_date']} for m in sortedmeets ]
 
-def get_pwtime(ftime=None,event=None):
+def get_pwtime(ftime=None,event_name=None):
     if ftime is None:
         log.error("get_pwtime() requires a time to check")
         return None
-    if event is None:
+    if event_name is None:
         log.error("get_pwtime() requires an event name to check")
         return None
     pwtimes = get_time_standards()
     for t in pwtimes:
-        if t['event_name'] != event:
+        if t['event_name'] != event_name:
             continue
         log.debug("Comparing %.2f to PWA:%.2f and PWB:%.2f"%(ftime,t['FinA'],t['FinB']))
         if ftime <= t['FinA']:
-            log.debug('    PWA TIME!!!!!',event)
+            log.debug('    PWA TIME!!!!!',event_name)
             return 'A'
         elif ftime <= t['FinB']:
-            log.debug('    PWB TIME!!!!!',event)
+            log.debug('    PWB TIME!!!!!',event_name)
             return 'B'
         else:
             return None 
-    log.error('get_pwtime(): event_name not found in time_standards')
+    log.error('get_pwtime(): event_name ("%s") not found in time_standards'%event_name)
     return None
 
 def get_time_standards():
@@ -282,6 +292,9 @@ def gen_event_list(meetdb='SwimMeetVOSD'):
     return evdata
 
 def hms2secs(hms=None):
+    '''
+    hms is expected to be a string of the format hh:mm:ss.ss
+    '''
     if hms is None:
         return None
     if not re.match('^[\d\:\.]+$',hms):
@@ -295,8 +308,13 @@ def hms2secs(hms=None):
     return round(s,2)
 
 def secs2hms(secs=None):
+    '''
+    secs is expected to be a float
+    '''
     if secs is None:
         return None
+    if not re.match('^[\d\.]+$',str(secs)):
+        log.error("'%s' not a number!"%str(secs))
     m,s = divmod(secs,60)
     h,m = divmod(m,60)
     s = round(s,2)
