@@ -7,3 +7,4 @@ DATAFILES = {
     'SWIMMERS' : 'swimmers.json'
 }
 
+TEAMNAME = 'Virginia Oaks Sea Devils'

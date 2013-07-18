@@ -1,14 +1,16 @@
-import rftw
-import pwsl
-import logging
 import re
 import os
 import json
 import datetime
+import logging
 from dateutil import parser as parsedate
-from . import settings
 
-log = logging.getLogger()
+import rftw
+import pwsl
+import swimming
+import settings
+
+log = logging.getLogger(__name__)
 
 PWTIMES = None
 
@@ -194,10 +196,28 @@ def find_meet_ids(*args,**kwargs):
         team_abbrev=None,
         season=None,
         meet_date=None
+
+    returns:
+        list of meet_ids sorted by most recent meet
     '''
     meets = find_meet_results(*args,**kwargs)
     sortedmeets = sorted(meets,key=lambda x: parsedate.parse(x['meet_date']),reverse=True)
     return [ {'id':m['meet_id'],'date':m['meet_date']} for m in sortedmeets ]
+
+def find_meet(*args,**kwargs):
+    '''
+    params: 
+        team_name=None,
+        team_abbrev=None,
+        season=None,
+        meet_date=None
+    '''
+    r = rftw.SwimMeetServices()
+    meetids = find_meet_ids(*args,**kwargs)
+    if len(meetids) <1:
+        return None
+    res = r.get_meet(meetid=meetids[0])
+    return res
 
 def get_pwtime(ftime=None,event_name=None):
     if ftime is None:
@@ -235,6 +255,38 @@ def load_time_standards():
         return None
     PWTIMES = json.load(open(tsfile,'rb'))
     return PWTIMES
+
+def gen_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None):
+    '''
+    get meet results from API and store results in Swimmer data structure
+    '''
+    meet = find_meet(team_name=None,team_abbrev=None,season=None,meet_date=None)
+    swimtime = {}
+    swimtime['meet_id'] = meet['meet_id']
+    swimtime['season'] = meet['season']
+    swimtime['meet_date'] = meet['meet_date']
+    indswims = meet['indswims']
+    for event in indswims:
+        swimtime['event'] = event['eventname']
+        swimtime['event_num'] = event['eventnum']
+        swimmers = event['swimmers']
+        for sw in swimmers:
+            name = sw['swimmer_name']
+            swimtime['time'] = sw['swimtime_sort']
+            swimtime['seedtime'] = sw['seedtime']
+            swimtime['points'] = sw['points']
+            swimtime['place'] = sw['finish']
+            rftw_id = sw['swimmer_id']
+            rftw_team_id = sw['team_id']
+            sex = sw['swimmer_gender']
+            rftw_team_abbrev = sw['team_abbrev']
+            s = swimming.getSwimmer(name)
+            if len(s.swimmer_ids) == 0:
+                s.add_swimmer_id(rftw_id,'rftw')
+                s.add_team_abbrev(rftw_team_abbrev,'rftw')
+                s.add_team_id(rftw_team_id,'rftw')
+                s.sex = sex
+            st = swimmer.SwimTime(s,**swimtime)
 
 def gen_time_standards(csvfile=None):
     '''
