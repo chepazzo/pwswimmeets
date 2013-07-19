@@ -216,7 +216,7 @@ def find_meet(*args,**kwargs):
     meetids = find_meet_ids(*args,**kwargs)
     if len(meetids) <1:
         return None
-    res = r.get_meet(meetid=meetids[0])
+    res = r.get_meet(meetid=meetids[0]['id'])
     return res
 
 def get_pwtime(ftime=None,event_name=None):
@@ -260,33 +260,55 @@ def gen_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None)
     '''
     get meet results from API and store results in Swimmer data structure
     '''
-    meet = find_meet(team_name=None,team_abbrev=None,season=None,meet_date=None)
-    swimtime = {}
-    swimtime['meet_id'] = meet['meet_id']
-    swimtime['season'] = meet['season']
-    swimtime['meet_date'] = meet['meet_date']
+    meet = find_meet(team_name=team_name,team_abbrev=team_abbrev,season=season,meet_date=meet_date)
+    #
+    meet_id = meet['meet_id']
+    season = meet['season']
+    meet_date = meet['meet_date']
+    #
+    for t in meet['teams']:
+        tid = t['team_id']
+        tn = t['team_name']
+        #
+        team = swimming.getTeam(tid,'rftw')
+        team.name = tn
+    #
     indswims = meet['indswims']
     for event in indswims:
-        swimtime['event'] = event['eventname']
-        swimtime['event_num'] = event['eventnum']
+        event_name = event['eventname']
+        event_num = event['eventnum']
+        #
         swimmers = event['swimmers']
         for sw in swimmers:
-            name = sw['swimmer_name']
-            swimtime['time'] = sw['swimtime_sort']
-            swimtime['seedtime'] = sw['seedtime']
-            swimtime['points'] = sw['points']
-            swimtime['place'] = sw['finish']
             rftw_id = sw['swimmer_id']
-            rftw_team_id = sw['team_id']
+            name = sw['swimmer_name']
             sex = sw['swimmer_gender']
+            #
+            rftw_team_id = sw['team_id']
             rftw_team_abbrev = sw['team_abbrev']
-            s = swimming.getSwimmer(name)
-            if len(s.swimmer_ids) == 0:
-                s.add_swimmer_id(rftw_id,'rftw')
-                s.add_team_abbrev(rftw_team_abbrev,'rftw')
-                s.add_team_id(rftw_team_id,'rftw')
-                s.sex = sex
-            st = swimmer.SwimTime(s,**swimtime)
+            #
+            fintime = sw['swimtime_sort']
+            seedtime = sw['seedtime']
+            points = sw['points']
+            place = sw['finish']
+            #
+            swimmer = swimming.getSwimmer(rftw_id,'rftw')
+            if swimmer.name is None:
+                swimmer.team = swimming.getTeam(rftw_team_id,'rftw')
+                swimmer.name = name
+                swimmer.sex = sex
+                swimmer.team.add_abbrev(rftw_team_abbrev,'rftw')
+                swimmer.sex = sex
+            swimtime = swimmer.addSwimTime(event_name)
+            swimtime.meet_id = meet_id
+            swimtime.meet_date = meet_date
+            #
+            swimtime.event = event_name
+            swimtime.event_num = event_num
+            swimtime.time = fintime
+            swimtime.seedtime = seedtime
+            swimtime.points = points
+            swimtime.place = place
 
 def gen_time_standards(csvfile=None):
     '''
@@ -385,7 +407,13 @@ if __name__ == '__main__':
     print get_best_times('phelps, michael')
     '''
 import pwswimmeets
+import logging
+log = logging.getLogger()
+log.setLevel(logging.DEBUG)
+log.addHandler(logging.StreamHandler())
 from pprint import pprint as pp
+meet_data = pwswimmeets.utils.gen_meet_results(team_abbrev='VOS',meet_date='7/13/2013')
+pp(meet_data)
 #evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
 evdata = pwswimmeets.utils.get_data_for_chart('phelps, michael')
 pp(evdata)
