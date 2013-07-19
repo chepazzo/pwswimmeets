@@ -11,12 +11,46 @@ from dateutil import parser as parsedate
 log = logging.getLogger(__name__)
 
 SWIMMERS = []
+TEAMS = []
 
-def getSwimmer(name,*args,**kwargs):
+def getSwimmer(sid=None,name=None):
     for s in SWIMMERS:
-        if s.name == name:
-            return s
-    return Swimmer(name,*args,**kwargs)
+        if sid is not None:
+            if sid in [ d['id'] in s.swimmer_ids ]
+                return s
+        if name is not None:
+            if s.name = name:
+                return s
+    sw = Swimmer(name)
+    SWIMMERS.append(sw)
+    return sw
+
+class Team(object):
+    def __init__(self,name):
+        self.name = ''
+        self.league_name = ''
+        self.type = '' # e.g. summer, hs
+        self.swimmers = []
+        self.ids = [] # {'id':'','source':''}
+        self.abbrevs = [] # {'abbrev':'','source':''}
+
+    def add_team_id(self,id=None,source=None):
+        if id is None or source is None:
+            log.error("Team.add_team_id():  Both id and source are required")
+            return None
+        if id in [i['id'] for i in self.team_ids ]:
+            log.error("Id '%s' already exists"%id)
+            return self.team_ids
+        self.team_ids.append({'id':id,'source':source})
+
+    def add_team_abbrev(self,abbrev=None,source=None):
+        if abbrev is None or source is None:
+            log.error("Team.add_team_abbrev():  Both abbrev and source are required")
+            return None
+        if abbrev in [i['abbrev'] for i in self.team_abbrevs ]:
+            log.error("Abbrev '%s' already exists"%abbrev)
+            return self.team_abbrevs
+        self.team_abbrevs.append({'abbrev':abbrev,'source':source})
 
 class Stroke(object):
     def __init__(self,swimmer,stroke_name=None):
@@ -68,8 +102,7 @@ class Swimmer(object):
      'name':'',     # rftw.get_meet().indswims[].swimmers[].swimmer_name
      'rftw_ids':[], # rftw.get_meet().indswims[].swimmers[].swimmer_id
      'sex':'',      # rftw.get_meet().indswims[].swimmers[].swimmer_gender
-     'team_ids':[{'id':'','source':'rftw'}],         # rftw.get_meet().indswims[].swimmers[].team_id
-     'team_abbrevs':[{'abbrev':'','source':'rftw'}], # rftw.get_meet().indswims[].swimmers[].team_abbrev
+     'team': <Team>,
      'strokes':[
             {'stroke':''            # utils.normalize_event_name(rftw.get_meet().indswims[].eventname)[3,4]
              'history':[<SwimTime>],
@@ -99,8 +132,6 @@ class Swimmer(object):
         self.start_date = None
         self.team_name = None
         self.times = {}
-        #self.add_swimmer(name)
-        #Swimmer.SWIMMERS.append(self)
 
     def add_swimmer_id(self,id=None,source=None):
         if id is None or source is None:
@@ -110,24 +141,6 @@ class Swimmer(object):
             log.error("Id '%s' already exists"%id)
             return self.swimmer_ids
         self.swimmer_ids.append({'id':id,'source':source})
-
-    def add_team_id(self,id=None,source=None):
-        if id is None or source is None:
-            log.error("Swimmer.add_team_id():  Both id and source are required")
-            return None
-        if id in [i['id'] for i in self.team_ids ]:
-            log.error("Id '%s' already exists"%id)
-            return self.team_ids
-        self.team_ids.append({'id':id,'source':source})
-
-    def add_team_abbrev(self,abbrev=None,source=None):
-        if abbrev is None or source is None:
-            log.error("Swimmer.add_team_abbrev():  Both abbrev and source are required")
-            return None
-        if abbrev in [i['abbrev'] for i in self.team_abbrevs ]:
-            log.error("Abbrev '%s' already exists"%abbrev)
-            return self.team_abbrevs
-        self.team_abbrevs.append({'abbrev':abbrev,'source':source})
 
     def get_stroke(self,stroke_name):
         if not re.match('^\d+\w? [\w\s]+$',stroke_name):
