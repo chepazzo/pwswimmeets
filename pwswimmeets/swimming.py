@@ -4,7 +4,7 @@ import rftw
 import utils
 import logging
 import settings
-
+import datetime
 import re
 from dateutil import parser as parsedate
 
@@ -64,6 +64,13 @@ class Team(object):
             return self.abbrevs
         self.abbrevs.append({'abbrev':abbrev,'source':source})
 
+    @property
+    def json(self):
+        obj = {'history':[]}
+        for a in ['name','league_name','type','ids','abbrevs']:
+            obj[a] = getattr(self,a,None)
+        return obj
+
 class Stroke(object):
     def __init__(self,swimmer,stroke_name=None):
         '''
@@ -81,30 +88,51 @@ class Stroke(object):
         self.history = []
 
     @property
-    def best_time(self,stroke):
+    def best_time(self):
         history = self.history
-        btime = min(history, key=lambda x:x.fintime)
+        validtimes = [h for h in history if h.fintime is not None]
+        if len(validtimes) == 0:
+            return None
+        btime = min(validtimes, key=lambda x:x.fintime)
         return btime
 
     @property
-    def seasonbest_time(self,stroke):
+    def seasonbest_time(self):
         history = self.history
         season = datetime.datetime.today().year
-        btime = min([h for h in history if h.season == season], key=lambda x:x.fintime)
+        validtimes = [h for h in history if h.fintime is not None and h.season == season]
+        if len(validtimes) == 0:
+            return None
+        btime = min(validtimes, key=lambda x:x.fintime)
         return btime
 
     @property
-    def last_time(self,stroke):
+    def last_time(self):
         history = self.history
-        btime = sorted([h for h in history],key=lambda x:x.date,reverse=True)[0]
+        validtimes = [h for h in history if h.fintime is not None]
+        if len(validtimes) == 0:
+            return None
+        btime = sorted(validtimes,key=lambda x:x.date,reverse=True)[0]
         return btime
 
     @property
-    def season_seed(self,stroke):
+    def season_seed(self):
         history = self.history
         season = datetime.datetime.today().year
-        firsttime = sorted([h for h in history if h.season == season],key=lambda x:x.date)[0]
-        return btime
+        validtimes = [h for h in history if h.fintime is not None and h.season == season]
+        if len(validtimes) == 0:
+            return None
+        firsttime = sorted(validtimes,key=lambda x:x.date)[0]
+        return firsttime
+
+    @property
+    def json(self):
+        obj = {'history':[]}
+        for a in ['stroke']:#,'best_time','seasonbest_time','last_time','season_seed']:
+            obj[a] = getattr(self,a,None)
+        for swimtime in self.history:
+            obj['history'].append(swimtime.json)
+        return obj
 
 class Swimmer(object):
     '''
@@ -153,7 +181,7 @@ class Swimmer(object):
             log.error("Invalid Stroke: '%s'"%stroke_name)
             return None
         strokes = self.strokes
-        ss = [ s for s in strokes if s.stroke_name == stroke_name ]
+        ss = [ s for s in strokes if s.stroke == stroke_name ]
         stroke = None
         if len(ss) != 0:
             stroke = ss[0]
@@ -165,42 +193,15 @@ class Swimmer(object):
             return None
         return stroke
 
-    def get_event_info(self,name):
-        '''
-        RFTW:
-          swimmer_age
-          eventname
-          meet_id
-          points
-          seed_time
-          finish (placed)
-          swimresult (final time)
-          meet_date
-        CALCULATED:
-          FinTime (time in sec.  used for sorting)
-        '''
-
-    def add_swimmer_from_api(self,name):
-        athletes = self.s.find_swimmer_by_lname(name,exact=True)
-        # sometimes there are multiple results for the same child!
-        self.sex = a[0]['Sex']
-        self.age = a[0]['Age']
-        self.dob = a[0]['DOB']
-        self.team = a[0]['AthTeamAbbr']
-        #self.athnos = [ a['AthNo'] for a in athletes ]
-        for a in athletes:
-            athno = a['AthNo']
-            self.athnos.append(athno)
-            # The assumption has to be that duplicate entries
-            # will list different events.  I could do a check here
-            # and see if the Sex, Age, DOB, or Team values differed, but 
-            # I don't know what I would do with that info.
-            results = s.get_athlete(athno)
-        return self
-
-    ## Class Methods ##
-    def get_swimmers_by_name(name):
-        return [a for a in SWIMMERS if a.name == name]
+    @property
+    def json(self):
+        obj = {'strokes':[]}
+        for a in ['name','swimmer_ids','dob','sex']:
+            obj[a] = getattr(self,a,None)
+        obj['team'] = self.team.name
+        for stroke in self.strokes:
+            obj['strokes'].append(stroke.json)
+        return obj
 
 class SwimTime(object):
     '''
@@ -221,6 +222,7 @@ class SwimTime(object):
                  time=None,seedtime=None,points=None,place=None):
         if swimmer.__class__ is not Swimmer:
             return None
+        self._pwt = None
         self.swimmer = swimmer
         self.meet_id = meet_id
         self.meet_date = meet_date
@@ -294,11 +296,16 @@ class SwimTime(object):
         as float in self.fintime
         '''
         value = time2secs(val)
+        status = "OK"
+        if value is None:
+            status = val
+        self.status = status
         self.fintime = value
         return value
 
     @property
     def hmstime(self):
+        #print "self.fintime = '%s'"%str(self.fintime)
         return utils.secs2hms(self.fintime)
 
     @property
@@ -316,17 +323,29 @@ class SwimTime(object):
 
     @property
     def hmsseedtime(self):
+        #print "self.finseedtime = '%s'"%str(self.finseedtime)
         return utils.secs2hms(self.finseedtime)
+
+    @property
+    def json(self):
+        obj = {}
+        for a in ['meet_id','status','season','event_name','event_num','time','seedtime','points','place','PWT']:
+            obj[a] = getattr(self,a,None)
+        obj['meet_date'] = self.meet_date.strftime('%B %d, %Y')
+        #obj['PWT'] = self.PWT
+        return obj
 
 def time2secs(val):
     value = val ## doing this to preserve the original value for logging at the end.
     if type(value) is int:
         value = float(value)
-    elif type(value) is str:
+    elif type(value) is str or type(value) is unicode:
+        if not re.match('^[\d\:\.]+$',value):
+            return None
         value = utils.hms2secs(value)
     if type(value) is float or value is None:
         return value
-    log.error("%s is invalid time type.  Shoud be float, int, str, or None"%str(val))
+    log.error("%s is invalid time type (%s).  Shoud be float, int, str, or None"%(str(val),str(type(val))))
     return None
 
 if __name__ == '__main__':

@@ -287,25 +287,24 @@ def gen_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None)
             rftw_team_id = sw['team_id']
             rftw_team_abbrev = sw['team_abbrev']
             #
-            fintime = sw['swimtime_sort']
+            hmstime = sw['swimresult']
             seedtime = sw['seedtime']
             points = sw['points']
             place = sw['finish']
             #
             swimmer = swimming.getSwimmer(rftw_id,'rftw')
             if swimmer.name is None:
-                swimmer.team = swimming.getTeam(rftw_team_id,'rftw')
                 swimmer.name = name
                 swimmer.sex = sex
-                swimmer.team.add_abbrev(rftw_team_abbrev,'rftw')
-                swimmer.sex = sex
+                swimmer.team = swimming.getTeam(rftw_team_id,'rftw')
+                #swimmer.team.add_abbrev(rftw_team_abbrev,'rftw')
             swimtime = swimmer.addSwimTime(event_name)
             swimtime.meet_id = meet_id
             swimtime.meet_date = meet_date
             #
             swimtime.event = event_name
             swimtime.event_num = event_num
-            swimtime.time = fintime
+            swimtime.time = hmstime
             swimtime.seedtime = seedtime
             swimtime.points = points
             swimtime.place = place
@@ -401,11 +400,24 @@ def secs2hms(secs=None):
     #return "%d:%05.2f"%(m,round(s,2))
 
 if __name__ == '__main__':
+    #log.setLevel(logging.DEBUG)
+    #log.addHandler(logging.StreamHandler())
+    #get_data_for_chart('bianc')
+    #print get_best_times('phelps, michael')
+    import pwswimmeets
+    import logging
+    log = logging.getLogger()
     log.setLevel(logging.DEBUG)
     log.addHandler(logging.StreamHandler())
-    #get_data_for_chart('bianc')
-    print get_best_times('phelps, michael')
-    '''
+    from pprint import pprint as pp
+    meet_data = gen_meet_results(team_abbrev='VOS',season='2013')
+    piper = [ s for s in swimming.SWIMMERS if s.name.startswith('Biancaniello, Piper') ][0]
+    pp(piper.json)
+    #evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
+    #evdata = pwswimmeets.utils.get_data_for_chart('phelps, michael')
+    #pp(evdata)
+
+'''
 import pwswimmeets
 import logging
 log = logging.getLogger()
@@ -415,7 +427,6 @@ from pprint import pprint as pp
 meet_data = pwswimmeets.utils.gen_meet_results(team_abbrev='VOS',meet_date='7/13/2013')
 pp(meet_data)
 #evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
-evdata = pwswimmeets.utils.get_data_for_chart('phelps, michael')
-pp(evdata)
-    '''
-
+#evdata = pwswimmeets.utils.get_data_for_chart('phelps, michael')
+#pp(evdata)
+'''
