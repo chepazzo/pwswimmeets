@@ -204,7 +204,7 @@ def find_meet_ids(*args,**kwargs):
     sortedmeets = sorted(meets,key=lambda x: parsedate.parse(x['meet_date']),reverse=True)
     return [ {'id':m['meet_id'],'date':m['meet_date']} for m in sortedmeets ]
 
-def find_meet(*args,**kwargs):
+def find_meets(*args,**kwargs):
     '''
     params: 
         team_name=None,
@@ -216,8 +216,11 @@ def find_meet(*args,**kwargs):
     meetids = find_meet_ids(*args,**kwargs)
     if len(meetids) <1:
         return None
-    res = r.get_meet(meetid=meetids[0]['id'])
-    return res
+    ret = []
+    for meetid in meetids:
+        res = r.get_meet(meetid=meetid['id'])
+        ret.append(res)
+    return ret
 
 def get_pwtime(ftime=None,event_name=None):
     if ftime is None:
@@ -260,8 +263,14 @@ def gen_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None)
     '''
     get meet results from API and store results in Swimmer data structure
     '''
-    meet = find_meet(team_name=team_name,team_abbrev=team_abbrev,season=season,meet_date=meet_date)
+    meets = find_meets(team_name=team_name,team_abbrev=team_abbrev,season=season,meet_date=meet_date)
+    log.info("Matched %s meets"%len(meets))
+    for meet in meets:
+        _gen_meet_results(meet=meet)
     #
+def _gen_meet_results(meet=None):
+    if meet is None:
+        return None
     meet_id = meet['meet_id']
     season = meet['season']
     meet_date = meet['meet_date']
@@ -273,7 +282,9 @@ def gen_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None)
         team = swimming.getTeam(tid,'rftw')
         team.name = tn
     #
-    indswims = meet['indswims']
+    indswims = meet.get('indswims',None)
+    if indswims is None:
+        return None
     for event in indswims:
         event_name = event['eventname']
         event_num = event['eventnum']
@@ -308,6 +319,10 @@ def gen_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None)
             swimtime.seedtime = seedtime
             swimtime.points = points
             swimtime.place = place
+
+def gen_meet_result_history(team_name=None,team_abbrev=None,season=None,meet_date=None):
+    meet_data = gen_meet_results(team_abbrev=team_abbrev,season='2013')
+    piper = [ s for s in swimming.SWIMMERS if s.name.startswith('Biancaniello, Piper') ][0]
 
 def gen_time_standards(csvfile=None):
     '''
@@ -410,7 +425,8 @@ if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
     log.addHandler(logging.StreamHandler())
     from pprint import pprint as pp
-    meet_data = gen_meet_results(team_abbrev='VOS',season='2013')
+    for season in range(2009,2013+1):
+        meet_data = gen_meet_results(team_abbrev='VOS',season=season)
     piper = [ s for s in swimming.SWIMMERS if s.name.startswith('Biancaniello, Piper') ][0]
     pp(piper.json)
     #evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
