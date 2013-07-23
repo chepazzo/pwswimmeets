@@ -14,15 +14,18 @@ log = logging.getLogger(__name__)
 SWIMMERS = []
 TEAMS = []
 
-def getTeam(tid=None,source=None):
-    if tid is None or source is None:
+def getTeam(tid=None,source=None,name=None):
+    if tid is not None and source is None:
         log.error("You need to specify team_id and source")
         return None
     for t in TEAMS:
-        if tid is not None:
+        if name is not None:
+            if t.name == name:
+                return t
+        elif tid is not None:
             if tid in [ d['id'] for d in t.ids ]:
                 return t
-    team = Team(tid,source)
+    team = Team(team_id=tid,source=source,name=name)
     TEAMS.append(team)
     return team
 
@@ -38,14 +41,21 @@ def getSwimmer(sid=None,source=None):
     return sw
 
 class Team(object):
-    def __init__(self,team_id,source):
-        self.name = ''
+    def __init__(self,name='',league_name='',type='',ids=None,abbrevs=None,
+            source=None,team_abbrev=None,team_id=None):
+        self.name = name
         self.league_name = ''
         self.type = '' # e.g. summer, hs
-        self.swimmers = []
         self.ids = [] # {'id':'','source':''}
         self.abbrevs = [] # {'abbrev':'','source':''}
-        self.add_id(team_id,source)
+        if ids is not None:
+            self.ids = ids
+        if abbrevs is not None:
+            self.abbrevs = abbrevs
+        if team_id is not None and source is not None:
+            self.add_id(team_id,source)
+        if team_abbrev is not None and source is not None:
+            self.add_abbrev(team_abbrev,source)
 
     def add_id(self,id=None,source=None):
         if id is None or source is None:
@@ -66,11 +76,19 @@ class Team(object):
         self.abbrevs.append({'abbrev':abbrev,'source':source})
 
     @property
+    def swimmers(self):
+        return [s for s in SWIMMERS if s.team is self]
+
+    @property
     def json(self):
-        obj = {'history':[]}
         for a in ['name','league_name','type','ids','abbrevs']:
             obj[a] = getattr(self,a,None)
         return obj
+
+    def load(self,jobj):
+        for a in ['name','league_name','type','ids','abbrevs']:
+            setattr(self,a,jobj[a])
+        return self
 
 class Stroke(object):
     def __init__(self,swimmer,stroke_name=None):
@@ -135,6 +153,13 @@ class Stroke(object):
             obj['history'].append(swimtime.json)
         return obj
 
+    def load(self,jobj):
+        for jswimtime in jobj['history']:
+            swimtime = SwimTime(self.swimmer)
+            swimtime.load(jswimtime)
+            self.history.append(swimtime)
+        return self
+
 class Swimmer(object):
     '''
     Am expecting to get most of this info from rftw.get_meet()
@@ -194,6 +219,7 @@ class Swimmer(object):
             return None
         return stroke
 
+    '''
     def load_stroke(self,jobj):
         stroke = self.get_stroke(jobj['stroke'])
         for jswimtime in jobj['history']:
@@ -203,6 +229,7 @@ class Swimmer(object):
             swimtime.load(jswimtime)
             #stroke.history.append(swimtime)
         return stroke
+    '''
 
     @property
     def json(self):
@@ -217,16 +244,14 @@ class Swimmer(object):
             obj['strokes'].append(stroke.json)
         return obj
 
-    def load(self,obj):
+    def load(self,jobj):
         for a in ['name','swimmer_ids','dob','sex']:
-            setattr(self,a,obj[a])
-        ## Really need to make this the Team Obj, but 
-        ## I chose not to store the json in a way that
-        ## allows me to recreate the team
-        ## so I'll probably have to come up with something else.
-        self.team = obj['team']
-        for stroke in obj['strokes']:
-            self.load_stroke(stroke)
+            setattr(self,a,jobj[a])
+        self.team = getTeam(name=jobj['team'])
+        for jstroke in jobj['strokes']:
+            strokeobj = self.get_stroke(jstroke['stroke'])
+            strokeobj.load(jstroke)
+        return self
 
 class SwimTime(object):
     '''
@@ -366,9 +391,17 @@ class SwimTime(object):
         self.event = jobj['event_name']
         return self
 
-def loadfromfile(filename=None):
-    filename = '/home/mikebianc/vaoaksswimmers.json'
-    swimmers = json.load(open(filename,'rb'))
+def loadfromfile():
+    swimmerfile = settings.DATAFILES['SWIMMERS']
+    teamfile = settings.DATAFILES['TEAMS']
+    #
+    teams = json.load(open(teamfile,'rb'))
+    for js in teams:
+        tid = js['ids'][0]
+        t = getTeam(tid=tid['id'],source=tid['source'])
+        t.load(js)
+    #
+    swimmers = json.load(open(swimmerfile,'rb'))
     for js in swimmers:
         sid = js['swimmer_ids'][0]
         s = getSwimmer(sid=sid['id'],source=sid['source'])
