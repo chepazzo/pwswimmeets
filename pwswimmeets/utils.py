@@ -419,7 +419,7 @@ if __name__ == '__main__':
     #log.addHandler(logging.StreamHandler())
     #get_data_for_chart('bianc')
     #print get_best_times('phelps, michael')
-    import pwswimmeets
+    #import pwswimmeets
     import logging
     log = logging.getLogger()
     log.setLevel(logging.DEBUG)

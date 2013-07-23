@@ -5,6 +5,7 @@ import utils
 import logging
 import settings
 import datetime
+import json
 import re
 from dateutil import parser as parsedate
 
@@ -193,15 +194,39 @@ class Swimmer(object):
             return None
         return stroke
 
+    def load_stroke(self,jobj):
+        stroke = self.get_stroke(jobj['stroke'])
+        for jswimtime in jobj['history']:
+            event_name = jswimtime['event_name']
+            swimtime = self.addSwimTime(event_name)
+            #swimtime = SwimTime(self)
+            swimtime.load(jswimtime)
+            #stroke.history.append(swimtime)
+        return stroke
+
     @property
     def json(self):
         obj = {'strokes':[]}
         for a in ['name','swimmer_ids','dob','sex']:
             obj[a] = getattr(self,a,None)
-        obj['team'] = self.team.name
+        team_name = self.team
+        if self.team.__class__ is Team:
+            team_name = self.team.name
+        obj['team'] = team_name
         for stroke in self.strokes:
             obj['strokes'].append(stroke.json)
         return obj
+
+    def load(self,obj):
+        for a in ['name','swimmer_ids','dob','sex']:
+            setattr(self,a,obj[a])
+        ## Really need to make this the Team Obj, but 
+        ## I chose not to store the json in a way that
+        ## allows me to recreate the team
+        ## so I'll probably have to come up with something else.
+        self.team = obj['team']
+        for stroke in obj['strokes']:
+            self.load_stroke(stroke)
 
 class SwimTime(object):
     '''
@@ -335,6 +360,20 @@ class SwimTime(object):
         #obj['PWT'] = self.PWT
         return obj
 
+    def load(self,jobj):
+        for a in ['meet_id','meet_date','status','season','event_num','time','seedtime','points','place']:
+            setattr(self,a,jobj[a])
+        self.event = jobj['event_name']
+        return self
+
+def loadfromfile(filename=None):
+    filename = '/home/mikebianc/vaoaksswimmers.json'
+    swimmers = json.load(open(filename,'rb'))
+    for js in swimmers:
+        sid = js['swimmer_ids'][0]
+        s = getSwimmer(sid=sid['id'],source=sid['source'])
+        s.load(js)
+
 def time2secs(val):
     value = val ## doing this to preserve the original value for logging at the end.
     if type(value) is int:
@@ -353,8 +392,7 @@ if __name__ == '__main__':
     settings.DATAFILES['EVENTS'] = './data/timestandards.json'
     settings.DATAFILES['SWIMMERS'] = './data/timestandards.json'
     log.setLevel(logging.DEBUG)
-    import json
     stand = json.load(open(settings.DATAFILES['TIMESTANDARDS'],'rb'))
     s = stand[0]
-    print "%s %sm %s PWB:%s PWA:%s"%(s['Event'],s['Dist'],s['Stroke'],s['PWB'],s['PWA'])
+    #print "%s %sm %s PWB:%s PWA:%s"%(s['Event'],s['Dist'],s['Stroke'],s['PWB'],s['PWA'])
 
