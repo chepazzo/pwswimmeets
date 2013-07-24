@@ -145,13 +145,12 @@ class Stroke(object):
         validtimes = [h for h in history if h.season == season]
         if len(validtimes) == 0:
             return None
-        firsttime = None
         for t in sorted(validtimes,key=lambda x:x.date):
             if t.finseedtime is not None:
-                firsttime = t
+                return t
             elif t.fintime is not None:
-                firsttime = t
-        return firsttime
+                return t
+        return None
 
     @property
     def season_improve(self):

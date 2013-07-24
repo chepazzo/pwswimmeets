@@ -183,23 +183,25 @@ def get_team_best(team_name=None,team_abbrev=None):
         for stroke in s.strokes:
             numbest = stroke.numbest
             stroke_name = stroke.stroke
-            bestst = stroke.best_time
+            bestst = stroke.seasonbest_time
+            if bestst is None:
+                continue
             seedst = stroke.seasonseed_time
-            best = None
-            seed = None
-            if bestst is not None:
-                best = bestst.fintime
+            finbest = bestst.fintime
+            bestdate = bestst.date.strftime('%B %d, %Y')
+            finseed = None
+            seeddate = None
             if seedst is not None:
-                seed = seedst.fintime
+                finseed = seedst.fintime
+                seeddate = seedst.date.strftime('%B %d, %Y')
                 if seedst.finseedtime is not None:
-                    seed = seedst.finseedtime
+                    finseed = seedst.finseedtime
             imp = stroke.season_improve
             res = {
+                'stroke':stroke_name,
                 'name':swim_name,
-                'best':best,
-                'hmsbest':secs2hms(best),
-                'seed':seed,
-                'hmsseed':secs2hms(seed),
+                'best':{'date':bestdate,'fintime':finbest,'hmstime':secs2hms(finbest)},
+                'seed':{'date':seeddate,'fintime':finseed,'hmstime':secs2hms(finseed)},
                 'improve':imp,
                 'numbest':numbest
             }
