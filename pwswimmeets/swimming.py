@@ -65,8 +65,8 @@ class Team(object):
             log.error("Team.add_id():  Both id and source are required")
             return None
         if id in [i['id'] for i in self.ids ]:
-            log.error("Id '%s' already exists"%id)
             return self.ids
+        log.info("Adding new ID: '%s'"%id)
         self.ids.append({'id':id,'source':source})
 
     def add_abbrev(self,abbrev=None,source=None):
@@ -74,8 +74,8 @@ class Team(object):
             log.error("Team.add_abbrev():  Both abbrev and source are required")
             return None
         if abbrev in [i['abbrev'] for i in self.abbrevs ]:
-            log.error("Abbrev '%s' already exists"%abbrev)
             return self.abbrevs
+        log.info("Adding new abbrev: '%s'"%abbrev)
         self.abbrevs.append({'abbrev':abbrev,'source':source})
 
     @property

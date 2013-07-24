@@ -273,10 +273,10 @@ def get_pwtime(ftime=None,event_name=None):
             continue
         log.debug("Comparing %.2f to PWA:%.2f and PWB:%.2f"%(ftime,t['FinA'],t['FinB']))
         if ftime <= t['FinA']:
-            log.debug('    PWA TIME!!!!!',event_name)
+            log.debug('    PWA TIME!!!!!')
             return 'A'
         elif ftime <= t['FinB']:
-            log.debug('    PWB TIME!!!!!',event_name)
+            log.debug('    PWB TIME!!!!!')
             return 'B'
         else:
             return None 
@@ -346,7 +346,7 @@ def _gen_meet_results(meet=None):
                 swimmer.name = name
                 swimmer.sex = sex
                 swimmer.team = swimming.getTeam(rftw_team_id,'rftw')
-                #swimmer.team.add_abbrev(rftw_team_abbrev,'rftw')
+                swimmer.team.add_abbrev(rftw_team_abbrev,'rftw')
             swimtime = swimmer.addSwimTime(event_name)
             swimtime.meet_id = meet_id
             swimtime.meet_date = meet_date
@@ -463,7 +463,8 @@ if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
     log.addHandler(logging.StreamHandler())
     from pprint import pprint as pp
-    for season in range(2009,2013+1):
+    #for season in range(2009,2013+1):
+    for season in [2013]:
         meet_data = gen_meet_results(team_abbrev='VOS',season=season)
     piper = [ s for s in swimming.SWIMMERS if s.name.startswith('Biancaniello, Piper') ][0]
     pp(piper.json)
