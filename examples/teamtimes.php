@@ -22,6 +22,7 @@
     var loaded = { 'googlechart':false,'chartdata':false,'teamtimes':false };
     var chartdata = [];
     var charthead = [];
+    var GLOBALS = [];
     var teamtimes = {'data':[],'head':['Season Best','Season Seed','Improved','Number of Best Times']};
 
     function INIT() {
@@ -76,7 +77,7 @@
     function drawTimesTable() {
         //if (!(loaded.googlechart && loaded.teamtimes)) { console.log('Times Table data not ready yet.'); return; }
         var dataTable = new google.visualization.DataTable();
-        MISHAP.TimesTable = dataTable;
+        GLOBALS.TimesTable = dataTable;
         dataTable.addColumn('string', 'Swimmer');
         dataTable.addColumn('string', 'Stroke');
         for (var i=0;i<teamtimes.head.length; i++) {
@@ -86,8 +87,23 @@
         for (i=0;i<teamtimes.data.length;i++) {
             dataTable.addRow(teamtimes.data[i]);
         }
-        var chart = new google.visualization.Table(document.getElementById('teamtimestable'));
-        chart.draw(dataTable);//, options);
+        GLOBALS.TEAMCHART = new google.visualization.Table(document.getElementById('teamtimestable'));
+        google.visualization.events.addListener(GLOBALS.TEAMCHART, 'select', onSelectRow);
+        GLOBALS.TEAMCHART.draw(dataTable);//, options);
+    }
+
+    function onSelectRow() {
+        var selection = TEAMCHART.getSelection();
+        for (var i = 0; i < selection.length; i++) {
+            var item = selection[i];
+            console.log(item);
+            var swimmer = GLOBALS.TimesTable.getValue(item.row, 0);
+            var link = document.createElement('a');
+            link.href = '/swimtimes.php?name='+swimmer;
+            link.target = '_new';
+            document.getElementsByTagName('body')[0].appendChild(link);
+            link.click();
+        }
     }
 
     function getJSON(script,formData,callback,instance) {
