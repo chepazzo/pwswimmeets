@@ -92,9 +92,6 @@ def normalize_event_name(ename):
 def update_swimmer_list():
     pass
 
-def get_best_time(name,event):
-    pass
-
 def get_best_times(name):
     store = {}
     r = rftw.SwimMeetServices()
@@ -167,6 +164,47 @@ def get_best_times(name):
         resultstore['seed'] = {'date':thisyeardate,'fintime':thisyeartime,'hmstime':secs2hms(thisyeartime)}
     return [ store[evt]['res'] for evt in store ]
     #return [ {'name':swimmername,'event':evt,'besttime':store[evt]['best']} for evt in store ]
+
+def get_team_best(team_name=None,team_abbrev=None):
+    ret = []
+    if len(swimming.TEAMS) == 0 or len(swimming.SWIMMERS) == 0:
+        swimming.loadfromfile()
+    team = None
+    if team_name is not None:
+        team = swimming.getTeam(name=team_name)
+    elif team_abbrev is not None:
+        team = swimming.getTeam(abbrev=team_abbrev)
+    if team is None:
+        return None
+    for s in swimming.SWIMMERS:
+        if s.team is not team:
+            continue
+        swim_name = s.name
+        for stroke in s.strokes:
+            numbest = stroke.numbest
+            stroke_name = stroke.stroke
+            bestst = stroke.best_time
+            seedst = stroke.seasonseed_time
+            best = None
+            seed = None
+            if bestst is not None:
+                best = bestst.fintime
+            if seedst is not None:
+                seed = seedst.fintime
+                if seedst.finseedtime is not None:
+                    seed = seedst.finseedtime
+            imp = stroke.season_improve
+            res = {
+                'name':swim_name,
+                'best':best,
+                'hmsbest':secs2hms(best),
+                'seed':seed,
+                'hmsseed':secs2hms(seed),
+                'improve':imp,
+                'numbest':numbest
+            }
+            ret.append(res)
+    return ret
 
 def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None):
     if season is None:

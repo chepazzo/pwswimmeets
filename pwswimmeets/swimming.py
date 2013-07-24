@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 SWIMMERS = []
 TEAMS = []
 
-def getTeam(tid=None,source=None,name=None):
+def getTeam(tid=None,source=None,abbrev=None,name=None):
     if tid is not None and source is None:
         log.error("You need to specify team_id and source")
         return None
@@ -24,6 +24,9 @@ def getTeam(tid=None,source=None,name=None):
                 return t
         elif tid is not None:
             if tid in [ d['id'] for d in t.ids ]:
+                return t
+        elif abbrev is not None:
+            if abbrev in [ d['abbrev'] for d in t.abbrevs ]:
                 return t
     team = Team(team_id=tid,source=source,name=name)
     TEAMS.append(team)
@@ -81,6 +84,7 @@ class Team(object):
 
     @property
     def json(self):
+        obj = {}
         for a in ['name','league_name','type','ids','abbrevs']:
             obj[a] = getattr(self,a,None)
         return obj
@@ -135,19 +139,46 @@ class Stroke(object):
         return btime
 
     @property
-    def season_seed(self):
+    def seasonseed_time(self):
         history = self.history
         season = datetime.datetime.today().year
-        validtimes = [h for h in history if h.fintime is not None and h.season == season]
+        validtimes = [h for h in history if h.season == season]
         if len(validtimes) == 0:
             return None
-        firsttime = sorted(validtimes,key=lambda x:x.date)[0]
+        firsttime = None
+        for t in sorted(validtimes,key=lambda x:x.date):
+            if t.finseedtime is not None:
+                firsttime = t
+            elif t.fintime is not None:
+                firsttime = t
         return firsttime
+
+    @property
+    def season_improve(self):
+        sbest = self.seasonbest_time
+        sseed = self.seasonseed_time
+        if sbest is None or sseed is None:
+            return None
+        seedtime = sseed.fintime
+        if sseed.finseedtime is not None:
+            seedtime = sseed.finseedtime
+        imp = seedtime - sbest.fintime
+        return round(imp,2)
+
+    @property
+    def last_improve(self):
+        return self.last_time.improve
+
+    @property
+    def numbest(self):
+        history = self.history
+        season = datetime.datetime.today().year
+        return len([h for h in history if h.season == season and h.isbest is True])
 
     @property
     def json(self):
         obj = {'history':[]}
-        for a in ['stroke']:#,'best_time','seasonbest_time','last_time','season_seed']:
+        for a in ['stroke']:#,'best_time','seasonbest_time','last_time','seasonseed_time']:
             obj[a] = getattr(self,a,None)
         for swimtime in self.history:
             obj['history'].append(swimtime.json)
@@ -185,6 +216,10 @@ class Swimmer(object):
         self.start_date = None
         self.strokes = []
         self.add_swimmer_id(swimmer_id,source)
+
+    @property
+    def numbest(self):
+        return sum([a.numbest for a in self.strokes])
 
     def add_swimmer_id(self,id=None,source=None):
         if id is None or source is None:
@@ -375,6 +410,21 @@ class SwimTime(object):
     def hmsseedtime(self):
         #print "self.finseedtime = '%s'"%str(self.finseedtime)
         return utils.secs2hms(self.finseedtime)
+
+    @property
+    def improved(self):
+        if self.seedtime is None or self.fintime is None:
+            return None
+        imp = self.seedtime - self.fintime
+        return round(imp,2)
+
+    @property
+    def isbest(self):
+        if self.improved is None:
+            return False
+        if self.improved < 0:
+            return False
+        return True
 
     @property
     def json(self):
