@@ -165,6 +165,34 @@ class Stroke(object):
         return round(imp,2)
 
     @property
+    def season_improve_percent(self):
+        imp = self.season_improve
+        if imp is None:
+            return None
+        best = self.seasonbest_time.fintime
+        perc = 100*imp/best
+        return round(perc,2)
+
+    @property
+    def season_improve_permeter(self):
+        imp = self.season_improve
+        if imp is None:
+            return None
+        dist = self.dist
+        if dist is None:
+            return None
+        perm = imp/dist
+        return round(perm,2)
+
+    @property
+    def dist(self):
+        sn = self.stroke
+        m = re.match('^(\d+)',sn)
+        if m is None:
+            return None
+        return int(m.groups()[0])
+
+    @property
     def last_improve(self):
         return self.last_time.improve
 
@@ -416,6 +444,17 @@ class SwimTime(object):
             return None
         imp = self.seedtime - self.fintime
         return round(imp,2)
+
+    @property
+    def speed(self):
+        secs = self.fintime
+        if secs is None:
+            return None
+        dist = int(self.event_dist)
+        if dist is None:
+            return None
+        speed = dist/secs
+        return round(speed,2)
 
     @property
     def isbest(self):

@@ -197,12 +197,16 @@ def get_team_best(team_name=None,team_abbrev=None):
                 if seedst.finseedtime is not None:
                     finseed = seedst.finseedtime
             imp = stroke.season_improve
+            impperc = stroke.season_improve_percent
+            impperm = stroke.season_improve_permeter
             res = {
                 'stroke':stroke_name,
                 'name':swim_name,
                 'best':{'date':bestdate,'fintime':finbest,'hmstime':secs2hms(finbest)},
                 'seed':{'date':seeddate,'fintime':finseed,'hmstime':secs2hms(finseed)},
                 'improve':imp,
+                'improveperc':impperc,
+                'improveperm':impperm,
                 'numbest':numbest
             }
             ret.append(res)
