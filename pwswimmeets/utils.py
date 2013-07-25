@@ -166,7 +166,7 @@ def get_best_times(name):
     #return [ {'name':swimmername,'event':evt,'besttime':store[evt]['best']} for evt in store ]
 
 def get_team_best(team_name=None,team_abbrev=None):
-    ret = []
+    ret = {'bystroke':[],'byswimmer':[]}
     if len(swimming.TEAMS) == 0 or len(swimming.SWIMMERS) == 0:
         swimming.loadfromfile()
     team = None
@@ -180,6 +180,14 @@ def get_team_best(team_name=None,team_abbrev=None):
         if s.team is not team:
             continue
         swim_name = s.name
+        swim_numbest = s.numbest
+        swim_totimp = s.totalimproved
+        sres = {
+            'name':swim_name,
+            'numbest':swim_numbest,
+            'totimp':swim_totimp
+        }
+        ret['byswimmer'].append(sres)
         for stroke in s.strokes:
             numbest = stroke.numbest
             stroke_name = stroke.stroke
@@ -209,7 +217,7 @@ def get_team_best(team_name=None,team_abbrev=None):
                 'improveperm':impperm,
                 'numbest':numbest
             }
-            ret.append(res)
+            ret['bystroke'].append(res)
     return ret
 
 def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None):

@@ -164,6 +164,8 @@ class Stroke(object):
         if sseed.finseedtime is None:
             seedtime = sseed.fintime
         imp = seedtime - sbest.fintime
+        if imp < 0:
+            return None
         return round(imp,2)
 
     @property
@@ -200,7 +202,10 @@ class Stroke(object):
 
     @property
     def last_improve(self):
-        return self.last_time.improve
+        imp = self.last_time.improve
+        if imp < 0:
+            return None
+        return imp
 
     @property
     def numbest(self):
@@ -252,7 +257,12 @@ class Swimmer(object):
 
     @property
     def numbest(self):
-        return sum([a.numbest for a in self.strokes])
+        return sum([a.numbest for a in self.strokes if a.numbest is not None])
+
+    @property
+    def totalimproved(self):
+        totimp = sum([a.season_improve for a in self.strokes if a.season_improve is not None])
+        return round(totimp,2)
 
     def add_swimmer_id(self,id=None,source=None):
         if id is None or source is None:

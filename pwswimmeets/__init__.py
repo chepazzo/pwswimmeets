@@ -10,7 +10,7 @@ cmd ref for reachthewall.com has been pieced together with the help of FireBug w
 '''
 
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 __author__ = 'Mike Biacaniello'
 __maintainer__ = 'Mike Biacaniello'
 __email__ = 'chepazzo@gmail.com'
