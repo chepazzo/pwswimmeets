@@ -158,9 +158,11 @@ class Stroke(object):
         sseed = self.seasonseed_time
         if sbest is None or sseed is None:
             return None
-        seedtime = sseed.fintime
-        if sseed.finseedtime is not None:
-            seedtime = sseed.finseedtime
+        ## At least one of findseedtime or fintime 
+        ## will not be None
+        seedtime = sseed.finseedtime
+        if sseed.finseedtime is None:
+            seedtime = sseed.fintime
         imp = seedtime - sbest.fintime
         return round(imp,2)
 
@@ -169,8 +171,12 @@ class Stroke(object):
         imp = self.season_improve
         if imp is None:
             return None
-        best = self.seasonbest_time.fintime
-        perc = 100*imp/best
+        ## At least one of findseedtime or fintime 
+        ## will not be None
+        seed = self.seasonseed_time.finseedtime
+        if self.seasonseed_time.finseedtime is None:
+            seed = self.seasonseed_time.fintime
+        perc = 100*imp/seed
         return round(perc,2)
 
     @property
