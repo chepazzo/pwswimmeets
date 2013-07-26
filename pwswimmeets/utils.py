@@ -374,7 +374,6 @@ def _gen_meet_results(meet=None):
 
 def gen_meet_result_history(team_name=None,team_abbrev=None,season=None,meet_date=None):
     meet_data = gen_meet_results(team_abbrev=team_abbrev,season='2013')
-    piper = [ s for s in swimming.SWIMMERS if s.name.startswith('Biancaniello, Piper') ][0]
 
 def gen_time_standards(csvfile=None):
     '''
@@ -480,8 +479,8 @@ if __name__ == '__main__':
     #for season in range(2009,2013+1):
     for season in [2013]:
         meet_data = gen_meet_results(team_abbrev='VOS',season=season)
-    piper = [ s for s in swimming.SWIMMERS if s.name.startswith('Biancaniello, Piper') ][0]
-    pp(piper.json)
+    phelps = [ s.json for s in swimming.SWIMMERS if s.name.startswith('Phelps, Michael') ][0]
+    pp(phelps)
     #evdata = pwswimmeets.utils.gen_event_list(meetdb='SwimMeetBLST')
     #evdata = pwswimmeets.utils.get_data_for_chart('phelps, michael')
     #pp(evdata)

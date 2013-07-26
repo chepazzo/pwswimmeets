@@ -11,11 +11,27 @@
 <html>
   <head>
     <title><?php echo $title; ?></title>
+    <style>
+ .title {
+    text-align: center;
+    font-size: 3em;
+ }
+ #slides {
+    width: 912px;
+    margin:auto;
+ }
+    </style>
  </head>
   <body>
     <h1><?php echo $title; ?></h1>
-    <div id='teamtimestable' style="width: 900px; height: 500px;">
-    </div><!-- id='teamtimestable' -->
+    <div id=slides>
+      <div id='slidestroke'>
+        <div id='stroketimestable' style='width:900px;height:400px'></div>
+      </div><!-- id='slidestroke' -->
+      <div id='slideswimmers'>
+        <div id='swimmertimestable' style='width:900px;height:400px'></div>
+      </div><!-- id='slideswimmers' -->
+    </div><!-- id=slides -->
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
     var name = '<?php echo $name; ?>';
@@ -23,7 +39,8 @@
     var chartdata = [];
     var charthead = [];
     var GLOBALS = [];
-    var teamtimes = {'data':[],'head':['Season Best','Season Seed','Improved','Number of Best Times']};
+    var teamtimes = {'data':[],'head':['Season Seed','Season Best','Improved (secs)','Improved (%)','Improved (secs/meter)','# of Best Times']};
+    var swimmertimes = {'data':[],'head':['Improved (secs)','# of Best Times']};
 
     function INIT() {
         initTabs();
@@ -33,7 +50,7 @@
 
     function loadData() {
         console.log('sending /cgi-bin/getteambesttimedata.py?team='+team);
-        getJSON('/cgi-bin/getteambesttimedata.py','team='+team,gotBestTimes);
+        getJSON('/cgi-bin/getteambesttimedata.py','team='+team,gotTeamTimes);
     }
 
     function datesort(a,b) { 
@@ -53,31 +70,53 @@
             'best':{'date':bestdate,'fintime':finbest,'hmstime':secs2hms(finbest)},
             'seed':{'date':seeddate,'fintime':finseed,'hmstime':secs2hms(finseed)},
             'improve':imp,
+            'improveperc':impperc,
+            'improveperm':impperm,
             'numbest':numbest
         }
         */
         loaded.teamtimes = true;
         //var dataobjsort = obj.sort(eventsort);
-        for (var e in obj) {
-            var eobj = obj[e];
+        for (var e in obj.bystroke) {
+            var eobj = obj.bystroke[e];
             var row = [eobj['name'],eobj['stroke']];
-            var best = {'f':eobj['best']['hmstime'],'v':eobj['best']['fintime']};
             var seed = {'f':eobj['seed']['hmstime'],'v':eobj['seed']['fintime']};
+            var best = {'f':eobj['best']['hmstime'],'v':eobj['best']['fintime']};
             var imp = eobj['improve'];
+            var impcstr = eobj['improveperc'];
+            var impmstr = eobj['improveperm'];
+            if (imp == null) { imp = 0; }
+            if (impcstr == null) { impcstr = 0; }
+            if (impmstr == null) { impmstr = 0; }
+            var impc = {'v':eobj['improveperc'],'f':impcstr.toString()+" %"};
+            var impm = {'v':eobj['improveperm'],'f':impmstr.toString()+" sec/m"};
             var numb = eobj['numbest'];
-            row.push(best);
             row.push(seed);
+            row.push(best);
             row.push(imp);
+            row.push(impc);
+            row.push(impm);
             row.push(numb);
             teamtimes.data.push(row);
         }
         drawTimesTable();
+        for (var e in obj.byswimmer) {
+            var eobj = obj.byswimmer[e];
+            var row = [eobj['name']];
+            var numb = eobj['numbest'];
+            var imp = eobj['totimp'];
+            if (numb == null) { numb = 0; }
+            if (imp == null) { imp = 0; }
+            row.push(imp);
+            row.push(numb);
+            swimmertimes.data.push(row);
+        }
+        drawSwimmerTable();
     }
 
     function drawTimesTable() {
-        //if (!(loaded.googlechart && loaded.teamtimes)) { console.log('Times Table data not ready yet.'); return; }
         var dataTable = new google.visualization.DataTable();
-        GLOBALS.TimesTable = dataTable;
+        MISHAP.TimesTable = dataTable;
         dataTable.addColumn('string', 'Swimmer');
         dataTable.addColumn('string', 'Stroke');
         for (var i=0;i<teamtimes.head.length; i++) {
@@ -87,20 +126,57 @@
         for (i=0;i<teamtimes.data.length;i++) {
             dataTable.addRow(teamtimes.data[i]);
         }
-        GLOBALS.TEAMCHART = new google.visualization.Table(document.getElementById('teamtimestable'));
-        google.visualization.events.addListener(GLOBALS.TEAMCHART, 'select', onSelectRow);
-        GLOBALS.TEAMCHART.draw(dataTable);//, options);
+        var options = {
+            'title':'Best Times By Stroke',
+            'showRowNumber':true,
+            'sortColumn':4,
+            'sortAscending':false
+        };
+        TEAMCHART = new google.visualization.Table(document.getElementById('stroketimestable'));
+        google.visualization.events.addListener(TEAMCHART, 'select', onSelectRow);
+        TEAMCHART.draw(dataTable,options);
+    }
+
+    function drawSwimmerTable() {
+        var dataTable = new google.visualization.DataTable();
+        MISHAP.TimesTable = dataTable;
+        dataTable.addColumn('string', 'Swimmer');
+        for (var i=0;i<swimmertimes.head.length; i++) {
+            header = swimmertimes.head[i];
+            dataTable.addColumn('number', header)
+        }
+        for (i=0;i<swimmertimes.data.length;i++) {
+            dataTable.addRow(swimmertimes.data[i]);
+        }
+        var options = {
+            'title':'Best Times By Swimmer',
+            'showRowNumber':true,
+            'sortColumn':1,
+            'sortAscending':false
+        };
+        SWIMMERCHART = new google.visualization.Table(document.getElementById('swimmertimestable'));
+        google.visualization.events.addListener(SWIMMERCHART, 'select', onSelectRowSwimmer);
+        SWIMMERCHART.draw(dataTable,options);//, options);
+        //chart.draw(dataView, options);
     }
 
     function onSelectRow() {
-        var selection = TEAMCHART.getSelection();
+        _onSelectRow(TEAMCHART);
+    }
+
+    function onSelectRowSwimmer() {
+        _onSelectRow(SWIMMERCHART);
+    }
+
+    function _onSelectRow(chart) {
+        var selection = chart.getSelection();
         for (var i = 0; i < selection.length; i++) {
             var item = selection[i];
             console.log(item);
-            var swimmer = GLOBALS.TimesTable.getValue(item.row, 0);
+            var swimmer = MISHAP.TimesTable.getValue(item.row, 0);
             var link = document.createElement('a');
             link.href = '/swimtimes.php?name='+swimmer;
-            link.target = '_new';
+            link.target = '_blank';
             document.getElementsByTagName('body')[0].appendChild(link);
             link.click();
         }
