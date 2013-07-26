@@ -259,6 +259,7 @@ class SwimMeetServices(object):
             return None
         if url is None:
             url = self.url + "/" + service
+        log.debug(url)
         if headers is None:
             headers = self.headers
         r = requests.post(url,data=json.dumps(data),headers=headers)

@@ -15,6 +15,62 @@ class SwimMeetServices(object):
         self.urlss = 'http://wiki.reachforthewall.com/skins/common/swimsearch.php'
         self.headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
+    def get_teams(self,ln=None):
+        '''
+        returns:
+        [
+         {"team_id":"189",
+          "division":"Green",
+          "section":"",
+          "team_name":"Virginia Oaks Sea Devils",
+          "team_shortname":"Virginia Oaks Sea Devils",
+          "team_abbrev":"VOS",
+          "team_abbrev_too":"VOS",
+          "team_type":"Summer",
+          "team_name_link":"Virginia_Oaks_Sea_Devils",
+          "address":"7980 Virginia Oaks Dr. Gainesville, VA 20155",
+          "contact_info":"(703) 753-0497",
+          "website":"http://www.swimvaoaks.com/"}
+        ]
+        '''
+        controller = 'teams'
+        if ln is None:
+            log.error("Must specify a league name.")
+            return None
+        data = {'ln':ln}
+        res = self._doit(controller,data=data)
+        return res
+
+    def get_team_info(self,team_name_link=None,season=None)
+        '''
+        returns:
+        {"teamabout":[
+         {"team_id":"189",
+          "league_id":"5",
+          "division":"Green",
+          "team_name":"Virginia Oaks Sea Devils",
+          "team_abbrev":"VOS",
+          "team_shortname":"Virginia Oaks Sea Devils",
+          "team_name_link":"Virginia_Oaks_Sea_Devils",
+          "team_address":"7980 Virginia Oaks Dr. Gainesville, VA 20155",
+          "contact_info":"(703) 753-0497",
+          "website":"http://www.swimvaoaks.com/",
+          "league_name":"Prince William Swim League ",
+          "league_name_link":"Prince_William_Swim_League",
+          "league_website":""}
+         ]
+        }
+        '''
+        controller = 'team_info'
+        if team_name_link is None:
+            log.error("Must specify a team name link.")
+            return None
+        if season is None:
+            season = datetime.datetime.today().year
+        data = {'team_name_link':team_name_link,'season':season}
+        res = self._doit(controller,data=data)
+        return res
+
     def get_swimmer_history(self,sid):
         '''
         returns:
@@ -47,21 +103,6 @@ class SwimMeetServices(object):
         data = {'sid':sid}
         res = self._doit(controller,data=data)
         return res
-
-    def find_swimmer_history_by_lname(self,lname):
-        '''
-        returns same structure as get_swimmer_history
-        '''
-        controller = 'swimmer'
-        if lname is None:
-            log.error("Must specify part of a name to search.")
-            return None
-        data = {'sn':lname}
-        res = self._doit(controller,data=data)
-        if res == None:
-            return None
-        aths = [n for n in res if n['swimmer_name'].lower().startswith(lname.lower())]
-        return aths
 
     def get_meet_results(self,season=None,ltype=None):
         '''
@@ -205,6 +246,98 @@ class SwimMeetServices(object):
         if res is None:
             log.error("get_meet(meetid='%s',result='%s') yielded no data."%(meetid,result))
         return res
+
+    def get_superwinners(self,ltype='summer',team_name_link=None,season=None):
+        '''
+        returns:
+        [
+         {"meet_id":"6342",
+          "league_abbrev":"PWSL ",
+          "team_id":"189",
+          "team_abbrev":"VOS",
+          "meet_date":"7/20/2013",
+          "swimmer_name":"Phelps, Michael",
+          "swimmer_age":"9",
+          "swimmer_id":"Phelps,Michael279317500",
+          "swimmer_gender":"F",
+          "season":"2013",
+          "hsclass":"",
+          "wins":"3",
+          "races":"3",
+          "total_points":"39.000"}
+        ]
+        '''
+        controller = 'superwinners'
+        if team_name_link is None:
+            log.error("Must specify a team name link.")
+            return None
+        if season is None:
+            season = datetime.datetime.today().year
+        data = {'tnl':team_name_link,'y':season,'lt':ltype}
+        res = self._doit(controller,data=data)
+        return res
+
+    def get_team_sked(self,team_name_link=None,season=None):
+        '''
+        returns:
+        {'teamabout':<team_info>,
+         'sked':[
+          {"meet_id":"5897",
+           "season":"2013",
+           "division":"Green",
+           "meet_date":"6/15/2013",
+           "pool":"Lake Manassas Blue Dolphins",
+           "pool_abbrev":"",
+           "meet_type":"Dual Meet",
+           "teams":[
+            {"team_name":"Virginia Oaks Sea Devils",
+             "team_shortname":"Virginia Oaks Sea Devils",
+             "team_abbrev":"VOS",
+             "team_abbrev_too":"VOS",
+             "team_type":"Summer",
+             "team_name_link":"Virginia_Oaks_Sea_Devils",
+             "points_scored":"2604.500",
+             "team_id":"189"}
+           ]}
+         ]
+        }
+        '''
+        controller = 'team_sked'
+        if team_name_link is None:
+            log.error("Must specify a team name link.")
+            return None
+        if season is None:
+            season = datetime.datetime.today().year
+        data = {'team_name_link':team_name_link,'season':season}
+        res = self._doit(controller,data=data)
+        return res
+
+    def get_seasons(self):
+        '''
+        returns:
+        {"hs":["2012-13","2011-12","2010-11","2009-10"],
+         "high school":["2012-13","2011-12","2010-11","2009-10"],
+         "summer":["2013","2013","2012","2011","2010","2009","2008"]}
+        '''
+        controller = 'seasons'
+        data = {}
+        res = self._doit(controller,data=data)
+        return res
+
+    def find_swimmer_history_by_lname(self,lname):
+        '''
+        returns same structure as get_swimmer_history
+        '''
+        controller = 'swimmer'
+        if lname is None:
+            log.error("Must specify part of a name to search.")
+            return None
+        data = {'sn':lname}
+        res = self._doit(controller,data=data)
+        if res == None:
+            return None
+        aths = [n for n in res if n['swimmer_name'].lower().startswith(lname.lower())]
+        return aths
 
     def find_swimmer_by_lname(self,lname):
         '''

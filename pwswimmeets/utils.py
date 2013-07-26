@@ -378,7 +378,10 @@ def gen_meet_result_history(team_name=None,team_abbrev=None,season=None,meet_dat
 def gen_time_standards(csvfile=None):
     '''
     Need to get data from somewhere.
+    I have yet to find a programatic interface that contains this data.
     I created a csv from: http://www.pwcweb.com/makos/PWSL_2003_Time_Standards.htm
+    This function expects a csv file of the format:
+    #event_name,sex,age,dist,stroke
     '''
     if csvfile is None:
         return None
@@ -412,6 +415,12 @@ def gen_time_standards(csvfile=None):
     return j
 
 def gen_event_list(meetdb='SwimMeetVOSD'):
+    '''
+    This will grab the latest swim meet data from pwsl
+    and extract the event names into a data structure.
+    This can be useful later for referencing event numbers to 
+    request data from the services.
+    '''
     s = pwsl.SwimMeetServices()
     events = s.get_events(meetdb)
     evdata = [ {'event_number':e['EventNumber'],'event_name':e['EventName'].strip()} for e in events ]
