@@ -47,8 +47,8 @@ class Team(object):
     def __init__(self,name='',league_name='',type='',ids=None,abbrevs=None,
             source=None,team_abbrev=None,team_id=None):
         self.name = name
-        self.league_name = ''
         self.type = '' # e.g. summer, hs
+        self.league_name = ''
         self.ids = [] # {'id':'','source':''}
         self.abbrevs = [] # {'abbrev':'','source':''}
         if ids is not None:
@@ -85,13 +85,14 @@ class Team(object):
     @property
     def json(self):
         obj = {}
-        for a in ['name','league_name','type','ids','abbrevs']:
+        for a in ['website', 'division', 'contact_info', 'abbrevs', 'section', 'ids', 'league_id', 'league_name', 'address', 'name', 'type']:
             obj[a] = getattr(self,a,None)
         return obj
 
     def load(self,jobj):
-        for a in ['name','league_name','type','ids','abbrevs']:
-            setattr(self,a,jobj[a])
+        for a in ['website', 'division', 'contact_info', 'abbrevs', 'section', 'ids', 'league_id', 'league_name', 'address', 'name', 'type']:
+            if a in jobj:
+                setattr(self,a,jobj[a])
         return self
 
 class Stroke(object):
@@ -308,6 +309,17 @@ class Swimmer(object):
             #stroke.history.append(swimtime)
         return stroke
     '''
+
+    def get_data_for_chart(self):
+        rows = {'events':[s.stroke for s in self.strokes],'data':{}}
+        for stroke in self.strokes:
+            evt = stroke.stroke
+            for h in stroke.history:
+                mdate = h.meet_date.strftime('%B %d, %Y')
+                if mdate not in rows['data']:
+                    rows['data'][mdate] = {'date':mdate}
+                rows['data'][mdate][evt] = {'fintime':h.fintime,'hmstime':h.hmstime,'PWT':h.PWT}
+        return rows
 
     @property
     def json(self):

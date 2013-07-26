@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 PWTIMES = None
 
-def get_data_for_chart(name):
+def get_data_for_chart(name,source=None):
     """
     formats data for display with Google Charts
     data needs to be grouped by date.
@@ -35,6 +35,27 @@ def get_data_for_chart(name):
     :returns:
         something
     """
+    if source == 'rftw':
+        return _get_data_for_chart_rftw(name)
+    else:
+        return _get_data_for_chart_local(name)
+
+def _get_data_for_chart_local(name):
+    rows = {'events':[],'data':{}}
+    if len(swimming.TEAMS) == 0 or len(swimming.SWIMMERS) == 0:
+        swimming.loadfromfile()
+    swimmerdata = [ s.get_data_for_chart() for s in swimming.SWIMMERS if s.name.lower().startswith(name.lower()) ]
+    for s in swimmerdata:
+        print json.dumps(s)
+        for e in s['events']:
+            if e not in rows['events']:
+                rows['events'].append(e)
+        for d in s['data']:
+            if d not in rows['data']:
+                rows['data'][d] = s['data'][d]
+    return rows
+
+def _get_data_for_chart_rftw(name):
     rows = {'events':[],'data':{}}
     r = rftw.SwimMeetServices()
     events = r.find_swimmer_history_by_lname(name)
@@ -220,7 +241,7 @@ def get_team_best(team_name=None,team_abbrev=None):
             ret['bystroke'].append(res)
     return ret
 
-def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None):
+def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None,league_abbrev=None):
     if season is None:
         if meet_date is not None:
             season = parsedate.parse(meet_date).year
@@ -232,6 +253,9 @@ def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None
     for m in res:
         if meet_date is not None and parsedate.parse(m['meet_date']) != parsedate.parse(meet_date):
             continue
+        if league_abbrev is not None:
+            if m['league_abbrev'] != league_abbrev:
+                continue
         if team_abbrev is not None:
             if len([ t for t in m['teams'] if t['team_abbrev'] == team_abbrev ]) < 1:
                 continue
@@ -311,11 +335,29 @@ def load_time_standards():
     PWTIMES = json.load(open(tsfile,'rb'))
     return PWTIMES
 
+def gen_teams(league='Prince_William_Swim_League'):
+    r = rftw.SwimMeetServices()
+    teams = r.get_teams(league_name_link=league)
+    for t in teams:
+        team = swimming.getTeam(source='rftw',tid=t['team_id'])
+        for f in ['division','section','address','contact_info','website']:
+            v = t[f]
+            setattr(team,f,v)
+        team.name = t['team_name']
+        team.type = t['team_type']
+        team.add_abbrev(t['team_abbrev'],'rftw')
+        ## Since I only support PWSL right now
+        team.league_name = 'Prince William Swim League'
+        team.league_id = '5'
+    return None
+
+MEETS = None
 def gen_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None):
     '''
     get meet results from API and store results in Swimmer data structure
     '''
     meets = find_meets(team_name=team_name,team_abbrev=team_abbrev,season=season,meet_date=meet_date)
+    MEETS = meets
     log.info("Matched %s meets"%len(meets))
     for meet in meets:
         _gen_meet_results(meet=meet)

@@ -15,7 +15,7 @@ class SwimMeetServices(object):
         self.urlss = 'http://wiki.reachforthewall.com/skins/common/swimsearch.php'
         self.headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-    def get_teams(self,ln=None):
+    def get_teams(self,league_name_link=None):
         '''
         returns:
         [
@@ -34,10 +34,10 @@ class SwimMeetServices(object):
         ]
         '''
         controller = 'teams'
-        if ln is None:
+        if league_name_link is None:
             log.error("Must specify a league name.")
             return None
-        data = {'ln':ln}
+        data = {'ln':league_name_link}
         res = self._doit(controller,data=data)
         return res
 
