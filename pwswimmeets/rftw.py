@@ -41,7 +41,7 @@ class SwimMeetServices(object):
         res = self._doit(controller,data=data)
         return res
 
-    def get_team_info(self,team_name_link=None,season=None)
+    def get_team_info(self,team_name_link=None,season=None):
         '''
         returns:
         {"teamabout":[
