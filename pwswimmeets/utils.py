@@ -46,7 +46,6 @@ def _get_data_for_chart_local(name):
         swimming.loadfromfile()
     swimmerdata = [ s.get_data_for_chart() for s in swimming.SWIMMERS if s.name.lower().startswith(name.lower()) ]
     for s in swimmerdata:
-        print json.dumps(s)
         for e in s['events']:
             if e not in rows['events']:
                 rows['events'].append(e)
@@ -113,7 +112,27 @@ def normalize_event_name(ename):
 def update_swimmer_list():
     pass
 
-def get_best_times(name):
+def get_best_times(name,source=None):
+    if source == 'rftw':
+        return _get_best_times_rftw(name)
+    else:
+        return _get_best_times_local(name)
+
+def _get_best_times_local(name):
+    store = {}
+    if len(swimming.TEAMS) == 0 or len(swimming.SWIMMERS) == 0:
+        swimming.loadfromfile()
+    swimmerdata = [ s.get_best_times() for s in swimming.SWIMMERS if s.name.lower().startswith(name.lower()) ]
+    for s in swimmerdata:
+        for evt in s:
+            e = s[evt]
+            if evt not in store:
+                store[evt] = e
+            else:
+                log.debug('multiple swimmer data (%s) with overlapping best time data'%e['name'])
+    return [store[evt] for evt in store]
+
+def _get_best_times_rftw(name):
     store = {}
     r = rftw.SwimMeetServices()
     events = r.find_swimmer_history_by_lname(name)

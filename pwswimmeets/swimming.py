@@ -214,6 +214,25 @@ class Stroke(object):
         season = datetime.datetime.today().year
         return len([h for h in history if h.season == season and h.isbest is True])
 
+    def get_best_times(self):
+        res = {'name':None,'event':None,'last':None,'prev':None,'seed':None,'best':None,'seasonbest':None}
+        last = self.last_time
+        seed = self.seasonseed_time
+        best = self.best_time
+        seasonbest = self.seasonbest_time
+        res['name'] = self.swimmer.name
+        res['event'] = self.stroke
+        if last is not None:
+            res['last'] = {'date':last.date.strftime('%B %d, %Y'),'hsmtime':last.hmstime,'fintime':last.fintime}
+            res['prev'] = {'date':last.date.strftime('%B %d, %Y'),'hsmtime':last.hmsseedtime,'fintime':last.finseedtime}
+        if seed is not None:
+            res['seed'] = {'date':seed.date.strftime('%B %d, %Y'),'hsmtime':seed.hmstime,'fintime':seed.fintime}
+        if best is not None:
+            res['best'] = {'date':best.date.strftime('%B %d, %Y'),'hsmtime':best.hmstime,'fintime':best.fintime}
+        if seasonbest is not None:
+            res['seasonbest'] = {'date':seasonbest.date.strftime('%B %d, %Y'),'hsmtime':seasonbest.hmstime,'fintime':seasonbest.fintime}
+        return res
+
     @property
     def json(self):
         obj = {'history':[]}
@@ -320,6 +339,13 @@ class Swimmer(object):
                     rows['data'][mdate] = {'date':mdate}
                 rows['data'][mdate][evt] = {'fintime':h.fintime,'hmstime':h.hmstime,'PWT':h.PWT}
         return rows
+
+    def get_best_times(self):
+        store = {}
+        for stroke in self.strokes:
+            evt = stroke.stroke
+            store[evt] = stroke.get_best_times()
+        return store
 
     @property
     def json(self):
