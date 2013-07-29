@@ -152,7 +152,7 @@ class SwimMeetServices(object):
             log.error("get_meet_results(ltype='%s',season='%s') yielded no data."%(ltype,season))
         return res
 
-    def get_meet(self,meetid=None,result='meet'):
+    def get_meet(self,meetid=None,result='meet',filestore=None):
         '''
         returns:
         {'boxscoretype': 'complete',
@@ -242,7 +242,10 @@ class SwimMeetServices(object):
             log.error('get_meet() requires a meetid.')
             return None
         data = {'meetId':meetid,'result':result}
-        res = self._doit(controller,data=data)
+        filename = None
+        if filestore is not None:
+            filename = filestore+'/'+meetid+'.json'
+        res = self._doit(controller,data=data,filename=filename)
         if res is None:
             log.error("get_meet(meetid='%s',result='%s') yielded no data."%(meetid,result))
         return res
@@ -353,7 +356,7 @@ class SwimMeetServices(object):
         aths = [n for n in res if n['display'].lower().startswith(lname.lower())]
         return aths
 
-    def _doit(self,controller,data=None,url=None,headers=None):
+    def _doit(self,controller,data=None,url=None,headers=None,filename=None):
         if data is None:
             log.error("No data sent to request")
             return None
@@ -372,6 +375,9 @@ class SwimMeetServices(object):
             return None
         jsonp = r.text
         apijson = jsonp[ jsonp.index("(")+1 : jsonp.rindex(")") ]
+        if filename is not None:
+            with open(filename,'w') as f:
+                f.write(apijson)
         res = json.loads(apijson)
         if 'error' in res:
             err = res['error']
