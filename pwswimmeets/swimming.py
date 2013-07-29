@@ -389,6 +389,7 @@ class SwimTime(object):
         if swimmer.__class__ is not Swimmer:
             return None
         self._pwt = None
+        self.status = ''
         self.swimmer = swimmer
         self.meet_id = meet_id
         self.meet_date = meet_date
@@ -465,14 +466,20 @@ class SwimTime(object):
         status = "OK"
         if value is None:
             status = val
-        self.status = status
+        if self.status == '':
+            self.status = status
         self.fintime = value
         return value
 
     @property
     def hmstime(self):
         #print "self.fintime = '%s'"%str(self.fintime)
-        return utils.secs2hms(self.fintime)
+        hmstime = utils.secs2hms(self.fintime)
+        if hmstime is None:
+            hmstime = self.status
+        if hmstime is None:
+            hmstime = ''
+        return hmstime
 
     @property
     def seedtime(self):
