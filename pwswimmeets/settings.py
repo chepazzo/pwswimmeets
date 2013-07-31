@@ -2,9 +2,10 @@ import os
 
 DATAFILEPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),'data')
 DATAFILES = {
-    'TIMESTANDARDS': 'timestandards.json',
-    'EVENTS' : 'events.json',
-    'SWIMMERS' : 'swimmers.json'
+    'TIMESTANDARDS': DATAFILEPATH+'timestandards.json',
+    'EVENTS' : DATAFILEPATH+'events.json',
+    'SWIMMERS' : None,
+    'TEAMS': None
 }
 
-TEAMNAME = 'Virginia Oaks Sea Devils'
+TEAMNAME = None
