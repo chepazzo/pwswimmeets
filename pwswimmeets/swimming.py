@@ -44,11 +44,13 @@ def getSwimmer(sid=None,source=None):
     return sw
 
 class Team(object):
-    def __init__(self,name='',league_name='',type='',ids=None,abbrevs=None,
+    def __init__(self,name='',league=None,type='',ids=None,abbrevs=None,
             source=None,team_abbrev=None,team_id=None):
         self.name = name
         self.type = '' # e.g. summer, hs
-        self.league_name = ''
+        if league is None:
+            league = {'name':'','id':'','abbrev':''}
+        self.league = league
         self.ids = [] # {'id':'','source':''}
         self.abbrevs = [] # {'abbrev':'','source':''}
         if ids is not None:
@@ -85,12 +87,12 @@ class Team(object):
     @property
     def json(self):
         obj = {}
-        for a in ['website', 'division', 'contact_info', 'abbrevs', 'section', 'ids', 'league_id', 'league_name', 'address', 'name', 'type']:
+        for a in ['website', 'division', 'contact_info', 'abbrevs', 'section', 'ids', 'league', 'address', 'name', 'type']:
             obj[a] = getattr(self,a,None)
         return obj
 
     def load(self,jobj):
-        for a in ['website', 'division', 'contact_info', 'abbrevs', 'section', 'ids', 'league_id', 'league_name', 'address', 'name', 'type']:
+        for a in ['website', 'division', 'contact_info', 'abbrevs', 'section', 'ids', 'league', 'address', 'name', 'type']:
             if a in jobj:
                 setattr(self,a,jobj[a])
         return self
@@ -389,7 +391,7 @@ class SwimTime(object):
         if swimmer.__class__ is not Swimmer:
             return None
         self._pwt = None
-        self.status = ''
+        self.status = None
         self.swimmer = swimmer
         self.meet_id = meet_id
         self.meet_date = meet_date
@@ -466,7 +468,7 @@ class SwimTime(object):
         status = "OK"
         if value is None:
             status = val
-        if self.status == '':
+        if self.status is None:
             self.status = status
         self.fintime = value
         return value

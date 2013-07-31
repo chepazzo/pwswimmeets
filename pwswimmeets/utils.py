@@ -273,7 +273,7 @@ def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None
         if meet_date is not None and parsedate.parse(m['meet_date']) != parsedate.parse(meet_date):
             continue
         if league_abbrev is not None:
-            if m['league_abbrev'] != league_abbrev:
+            if m['league_abbrev'].strip() != league_abbrev:
                 continue
         if team_abbrev is not None:
             if len([ t for t in m['teams'] if t['team_abbrev'] == team_abbrev ]) < 1:
@@ -366,8 +366,9 @@ def gen_teams(league='Prince_William_Swim_League'):
         team.type = t['team_type']
         team.add_abbrev(t['team_abbrev'],'rftw')
         ## Since I only support PWSL right now
-        team.league_name = 'Prince William Swim League'
-        team.league_id = '5'
+        team.league = {'name':'Prince William Swim League',
+                       'id':'5',
+                       'abbrev':'PWSL'}
     return None
 
 MEETS = None
@@ -385,8 +386,10 @@ def _gen_meet_results(meet=None):
     if meet is None:
         return None
     meet_id = meet['meet_id']
+    log.debug("storing meet: %s"%meet_id)
     season = meet['season']
     meet_date = meet['meet_date']
+    log.debug("    date:%s"%meet_date)
     #
     for t in meet['teams']:
         tid = t['team_id']
@@ -394,6 +397,7 @@ def _gen_meet_results(meet=None):
         #
         team = swimming.getTeam(tid,'rftw')
         team.name = tn
+        log.debug("    team:'%s','%s'"%(t['league_abbrev'],team.name))
     #
     indswims = meet.get('indswims',None)
     if indswims is None:
