@@ -14,6 +14,8 @@ log = logging.getLogger(__name__)
 SWIMMERS = []
 TEAMS = []
 
+CURRSEASON = datetime.datetime.today().year
+
 def getTeam(tid=None,source=None,abbrev=None,name=None):
     if tid is not None and source is None:
         log.error("You need to specify team_id and source")
@@ -125,7 +127,7 @@ class Stroke(object):
     @property
     def seasonbest_time(self):
         history = self.history
-        season = datetime.datetime.today().year
+        season = CURRSEASON
         validtimes = [h for h in history if h.fintime is not None and h.season == season]
         if len(validtimes) == 0:
             return None
@@ -144,7 +146,7 @@ class Stroke(object):
     @property
     def seasonseed_time(self):
         history = self.history
-        season = datetime.datetime.today().year
+        season = CURRSEASON
         validtimes = [h for h in history if h.season == season]
         if len(validtimes) == 0:
             return None
@@ -213,11 +215,12 @@ class Stroke(object):
     @property
     def numbest(self):
         history = self.history
-        season = datetime.datetime.today().year
+        season = CURRSEASON
         return len([h for h in history if h.season == season and h.isbest is True])
 
     def get_best_times(self):
-        res = {'name':None,'event':None,'last':None,'prev':None,'seed':None,'best':None,'seasonbest':None}
+        notime = {'date':None,'fintime':None,'hmstime':None}
+        res = {'name':None,'event':None,'last':notime,'prev':notime,'seed':notime,'best':notime,'seasonbest':notime}
         last = self.last_time
         seed = self.seasonseed_time
         best = self.best_time
