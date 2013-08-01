@@ -12,7 +12,7 @@ pwswimmeets.settings.DATAFILES['SWIMMERS'] = '/opt/web/sites/MISHAP/data/swimmer
 pwswimmeets.settings.DATAFILES['TEAMS'] = '/opt/web/sites/MISHAP/data/pwslteams.json'
 
 if season is not None:
-    pwswimmeets.swimming.CURRSEASON = season
+    pwswimmeets.swimming.CURRSEASON = int(season)
 
 print "Content-type: application/json"
 print
