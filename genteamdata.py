@@ -16,8 +16,9 @@ def gen_teams(filename):
     json.dump([t.json for t in pwswimmeets.swimming.TEAMS],open(filename,'w'))
 
 def initargs():
+    teamfile = pwswimmeets.settings.DATAFILES['TEAMS']
     parser = argparse.ArgumentParser()
-    parser.add_argument('--file', help='json file destination',default=pwswimmeets.settings.DATAFILES['TEAMS'])
+    parser.add_argument('--file', help='json file destination',default=teamfile)
     parser.add_argument('--debug', action='store_true',help='Enable debug output')
     args = parser.parse_args()
     if args.file is None:

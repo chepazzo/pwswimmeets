@@ -8,4 +8,11 @@ DATAFILES = {
     'TEAMS': None
 }
 
+LEAGUE = {
+    'name':'Prince William Swim League',
+    'id':'5',
+    'abbrev':'PWSL'
+}
+
+
 TEAMNAME = None

@@ -354,7 +354,13 @@ def load_time_standards():
     PWTIMES = json.load(open(tsfile,'rb'))
     return PWTIMES
 
-def gen_teams(league='Prince_William_Swim_League'):
+def gen_teams():
+    ## Requiring league to be set in settings file
+    ## Otherwise it starts to get complicated and
+    ## I'd have to require that the user pass args
+    ## for league_id and name and abbrev
+    league = settings.LEAGUE.get('name',None)
+    league = league.replace(' ','_')
     r = rftw.SwimMeetServices()
     teams = r.get_teams(league_name_link=league)
     for t in teams:
@@ -365,10 +371,7 @@ def gen_teams(league='Prince_William_Swim_League'):
         team.name = t['team_name']
         team.type = t['team_type']
         team.add_abbrev(t['team_abbrev'],'rftw')
-        ## Since I only support PWSL right now
-        team.league = {'name':'Prince William Swim League',
-                       'id':'5',
-                       'abbrev':'PWSL'}
+        team.league = settings.LEAGUE
     return None
 
 MEETS = None
