@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 
 import pwswimmeets
-#import pwswimmeets_old as pwswimmeets
 import cgi
 import json
 
 form = cgi.FieldStorage()
 team = form.getvalue("team", None)
+season = form.getvalue("season", None)
 
-pwswimmeets.settings.DATAFILES['SWIMMERS'] = 'data/vosdswimmers.json'
-pwswimmeets.settings.DATAFILES['TEAMS'] = 'data/teams.json'
+pwswimmeets.settings.DATAFILES['SWIMMERS'] = '/opt/web/sites/MISHAP/data/swimmers/swimmers_VOS.json'
+pwswimmeets.settings.DATAFILES['TEAMS'] = '/opt/web/sites/MISHAP/data/pwslteams.json'
 
-#teamstats = pwswimmeets.utils.get_team_best(team_abbrev=team)
-#from pprint import pprint as pp
-#pp(teamstats)
+if season is not None:
+    pwswimmeets.swimming.CURRSEASON = season
 
 print "Content-type: application/json"
 print
