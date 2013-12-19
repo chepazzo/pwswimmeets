@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Copyright, 2012-2013 AOL Inc.
-
 from setuptools import setup, find_packages, Command
 import glob
 import os
