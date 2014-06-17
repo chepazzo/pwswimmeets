@@ -16,6 +16,8 @@ TEAMS = []
 
 CURRSEASON = datetime.datetime.today().year
 
+reidx = re.compile('\d+$')
+
 def getTeam(tid=None,source=None,abbrev=None,name=None):
     if tid is not None and source is None:
         log.error("You need to specify team_id and source")
@@ -38,8 +40,15 @@ def getSwimmer(sid=None,source=None):
     if sid is None or source is None:
         log.error("You need to specify swimmer_id and source")
         return None
+    sidx = sid
+    if source == 'rftw':
+        smatch = re.search(reidx,sid)
+        if smatch is not None:
+            sidx = smatch.group()
     for s in SWIMMERS:
-        if sid in [ d['id'] for d in s.swimmer_ids ]:
+        if sidx in [ d['idx'] for d in s.swimmer_ids ]:
+            if sid not in [ d['id'] for d in s.swimmer_ids ]:
+                s.add_swimmer_id(sid,source)
             return s
     sw = Swimmer(sid,source)
     SWIMMERS.append(sw)
@@ -289,14 +298,19 @@ class Swimmer(object):
         totimp = sum([a.season_improve for a in self.strokes if a.season_improve is not None])
         return round(totimp,2)
 
-    def add_swimmer_id(self,id=None,source=None):
-        if id is None or source is None:
+    def add_swimmer_id(self,sid=None,source=None):
+        if sid is None or source is None:
             log.error("Swimmer.add_swimmer_id():  Both id and source are required")
             return None
-        if id in [i['id'] for i in self.swimmer_ids ]:
-            log.error("Id '%s' already exists"%id)
+        if sid in [i['id'] for i in self.swimmer_ids ]:
+            log.error("Id '%s' already exists"%sid)
             return self.swimmer_ids
-        self.swimmer_ids.append({'id':id,'source':source})
+        swimmer_idx = id
+        if source == 'rftw':
+            swimmer_match = re.search(reidx,sid)
+            if swimmer_match is not None:
+                swimmer_idx = swimmer_match.group()
+        self.swimmer_ids.append({'id':sid,'source':source,'idx':swimmer_idx})
 
     def addSwimTime(self,event_name,**kwargs):
         swtime = SwimTime(self,event_name=event_name,**kwargs)

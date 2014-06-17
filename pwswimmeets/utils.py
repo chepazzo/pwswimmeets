@@ -269,6 +269,8 @@ def find_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None
     ret = []
     r = rftw.SwimMeetServices()
     res = r.get_meet_results(season=season)
+    if res is None:
+        return
     for m in res:
         if meet_date is not None and parsedate.parse(m['meet_date']) != parsedate.parse(meet_date):
             continue
@@ -296,6 +298,8 @@ def find_meet_ids(*args,**kwargs):
         list of meet_ids sorted by most recent meet
     '''
     meets = find_meet_results(*args,**kwargs)
+    if meets is None:
+        return []
     sortedmeets = sorted(meets,key=lambda x: parsedate.parse(x['meet_date']),reverse=True)
     return [ {'id':m['meet_id'],'date':m['meet_date']} for m in sortedmeets ]
 
@@ -375,7 +379,7 @@ def gen_teams():
     return None
 
 MEETS = None
-def gen_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None):
+def gen_meet_results(team_name=None,team_abbrev=None,season=None,meet_date=None,league_abbrev=None):
     '''
     get meet results from API and store results in Swimmer data structure
     '''
