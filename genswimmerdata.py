@@ -12,7 +12,7 @@ def main():
     args = initargs()
     initlogging(args.debug)
     loadTeams(args.teams)
-    seasonrange = range(2010,pwswimmeets.swimming.CURRSEASON+1)
+    seasonrange = range(2009,pwswimmeets.swimming.CURRSEASON+1)
     if args.season is not None:
         seasonrange = [args.season]
     log.debug("Grabbing data for seasons: %s"%seasonrange)
