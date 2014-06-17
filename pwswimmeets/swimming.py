@@ -305,7 +305,7 @@ class Swimmer(object):
         if sid in [i['id'] for i in self.swimmer_ids ]:
             log.error("Id '%s' already exists"%sid)
             return self.swimmer_ids
-        swimmer_idx = id
+        swimmer_idx = sid
         if source == 'rftw':
             swimmer_match = re.search(reidx,sid)
             if swimmer_match is not None:

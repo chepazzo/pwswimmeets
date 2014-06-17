@@ -15,7 +15,7 @@ def main():
     seasonrange = range(2010,pwswimmeets.swimming.CURRSEASON+1)
     if args.season is not None:
         seasonrange = [args.season]
-    log.debug(seasonrange)
+    log.debug("Grabbing data for seasons: %s"%seasonrange)
     for season in seasonrange:
         swimmers = gen_swimmers(args.dir,team_name=args.name,team_abbrev=args.abbrev,season=season,meet_date=args.date,league_abbrev=league_abbrev)
 
@@ -25,12 +25,12 @@ def gen_swimmers(dirname,**kwargs):
         if t.league['abbrev'] != league_abbrev:
             continue
         log.debug("Team:%s"%t)
-        print "abbrevs: ",t.abbrevs[0]
         team_abbrev = t.abbrevs[0]['abbrev']
         swimmerfile = dirname+'/swimmers_'+team_abbrev+".json"
         log.debug("    File: %s"%swimmerfile)
         swims = [s for s in pwswimmeets.swimming.SWIMMERS if s.team is t]
-        json.dump([s.json for s in swims],open(swimmerfile,'w'))
+        swimstr = [s.json for s in swims]
+        json.dump(swimstr,open(swimmerfile,'w'))
 
 def loadTeams(teamfile):
     if teamfile is None:
