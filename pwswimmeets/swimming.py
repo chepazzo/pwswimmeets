@@ -316,6 +316,14 @@ class Swimmer(object):
         swtime = SwimTime(self,event_name=event_name,**kwargs)
         stroke_name = '%s %s'%(swtime.event_dist,swtime.event_stroke)
         stroke = self.get_stroke(stroke_name)
+        if 'meet_date' in kwargs:
+            if swtime.meet_date in [t.meet_date for t in stroke.history]:
+                log.error("%s for %s for %s already exists!"%(stroke_name,kwargs['meet_date'],self.name))
+                return None
+        if 'meet_id' in kwargs:
+            if swtime.meet_id in [t.meet_id for t in stroke.history]:
+                log.error("%s for meet:%s for %s already exists!"%(stroke_name,kwargs['meet_id'],self.name))
+                return None
         stroke.history.append(swtime)
         return swtime
 
@@ -410,9 +418,9 @@ class SwimTime(object):
         self._pwt = None
         self.status = None
         self.swimmer = swimmer
+        self.season = season
         self.meet_id = meet_id
         self.meet_date = meet_date
-        self.season = season
         self.event = event_name
         self.event_num = event_num
         self.time = time

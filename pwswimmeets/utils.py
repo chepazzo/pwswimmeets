@@ -433,7 +433,9 @@ def _gen_meet_results(meet=None):
                 swimmer.sex = sex
                 swimmer.team = swimming.getTeam(rftw_team_id,'rftw')
                 swimmer.team.add_abbrev(rftw_team_abbrev,'rftw')
-            swimtime = swimmer.addSwimTime(event_name)
+            swimtime = swimmer.addSwimTime(event_name,meet_date=meet_date)
+            if swimtime is None:
+                continue
             swimtime.meet_id = meet_id
             swimtime.meet_date = meet_date
             #
