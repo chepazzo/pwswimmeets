@@ -16,8 +16,6 @@ TEAMS = []
 
 CURRSEASON = datetime.datetime.today().year
 
-reidx = re.compile('\d+$')
-
 def getTeam(tid=None,source=None,abbrev=None,name=None):
     if tid is not None and source is None:
         log.error("You need to specify team_id and source")
@@ -40,13 +38,18 @@ def getSwimmer(sid=None,source=None):
     if sid is None or source is None:
         log.error("You need to specify swimmer_id and source")
         return None
-    sidx = sid
+    sidnorm = sid
     if source == 'rftw':
-        smatch = re.search(reidx,sid)
-        if smatch is not None:
-            sidx = smatch.group()
+        sidnorm = rftw.normalize_swimmer_id(sid)
     for s in SWIMMERS:
-        if sidx in [ d['idx'] for d in s.swimmer_ids ]:
+        ## If the idx matches, this is the same swimmer
+        ## even if the id doesn't match
+        ## ... Usually ... 
+        ## Had to change this because apparently rftw not only 
+        ## seemingly randomly adds middle initials, but also reuses
+        ## the idx portion ... sometimes.
+        if sidnorm in [ d['idnorm'] for d in s.swimmer_ids ]:
+            ## We know we have the right swimmer, so now add this id
             if sid not in [ d['id'] for d in s.swimmer_ids ]:
                 s.add_swimmer_id(sid,source)
             return s
@@ -305,12 +308,10 @@ class Swimmer(object):
         if sid in [i['id'] for i in self.swimmer_ids ]:
             log.error("Id '%s' already exists"%sid)
             return self.swimmer_ids
-        swimmer_idx = sid
+        sidnorm = sid
         if source == 'rftw':
-            swimmer_match = re.search(reidx,sid)
-            if swimmer_match is not None:
-                swimmer_idx = swimmer_match.group()
-        self.swimmer_ids.append({'id':sid,'source':source,'idx':swimmer_idx})
+            sidnorm = rftw.normalize_swimmer_id(sid)
+        self.swimmer_ids.append({'id':sid,'source':source,'idnorm':sidnorm})
 
     def addSwimTime(self,event_name,**kwargs):
         swtime = SwimTime(self,event_name=event_name,**kwargs)

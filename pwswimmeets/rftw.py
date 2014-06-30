@@ -8,6 +8,8 @@ import datetime
 
 log = logging.getLogger()
 
+reidx = re.compile('([A-Z]?)(\d+)$')
+
 class SwimMeetServices(object):
 
     def __init__(self):
@@ -402,6 +404,10 @@ class SwimMeetServices(object):
             return None
         res = r.json()
         return res
+
+def normalize_swimmer_id(sid):
+    sidnorm = re.sub(reidx,r'\2',sid)
+    return sidnorm
 
 if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
