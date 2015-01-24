@@ -46,8 +46,10 @@ setup(
     description=desc,
     long_description=long_desc,
     scripts=[],
-    data_files=[(__packagename__+'/examples/htdocs/', glob('examples/htdocs/*'))],
-    data_files=[(__packagename__+'/examples/cgi-bin/', glob('examples/cgi-bin/*'))],
+    data_files=[
+        (__packagename__+'/examples/htdocs/', glob('examples/htdocs/*')),
+        (__packagename__+'/examples/cgi-bin/', glob('examples/cgi-bin/*'))
+    ],
     package_data={__packagename__: ['data/*.json']},
     #include_package_data=True,
     install_requires=requires,
