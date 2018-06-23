@@ -22,7 +22,8 @@ long_desc = __doc__
 
 # Names of required packages
 requires = [
-    'requests'
+    'requests',
+    'python-dateutil'
 ]
 
 class CleanCommand(Command):

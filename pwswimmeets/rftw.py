@@ -11,8 +11,8 @@ log = logging.getLogger()
 class SwimMeetServices(object):
 
     def __init__(self):
-        self.url = 'http://www.reachforthewall.com/wp-content/themes/rftw/json.php'
-        self.urlss = 'http://wiki.reachforthewall.com/skins/common/swimsearch.php'
+        self.url = 'http://reachforthewall.org/wp-content/themes/colormag/rftw/json.php'
+        self.urlss = 'http://wiki.reachforthewall.org/skins/common/swimsearch.php'
         self.headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
     def get_teams(self,league_name_link=None):

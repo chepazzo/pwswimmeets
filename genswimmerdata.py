@@ -4,6 +4,8 @@ import pwswimmeets
 import argparse
 import json
 import logging
+from pwswimmeets.swimming import getTeam
+
 log = logging.getLogger()
 
 league_abbrev = pwswimmeets.settings.LEAGUE['abbrev']
@@ -17,14 +19,15 @@ def main():
     if args.season is not None:
         seasonrange = [args.season]
     for season in seasonrange:
-        swimmers = gen_swimmers(args.dir,team_name=args.name,team_abbrev=args.abbrev,season=season,meet_date=args.date,league_abbrev=league_abbrev)
+        swimmers = gen_swimmers(args.dir,team_name=args.name,team_abbrev=args.abbrev,season=season,meet_date=args.date)#,league_abbrev=league_abbrev)
 
 def gen_swimmers(dirname,**kwargs):
     swimmers = pwswimmeets.utils.gen_meet_results(**kwargs)
-    for t in pwsimmeets.swimming.TEAMS:
+    for t in pwswimmeets.swimming.TEAMS:
         if t.league['abbrev'] != league_abbrev:
             continue
-        team_abbrev = t.abbrevs[0].abbrev
+        team_abbrev = t.abbrevs[0]['abbrev']
+        #team_abbrev = t.abbrevs[0].abbrev
         swimmerfile = dirname+'/swimmers_'+team_abbrev+".json"
         swims = [s for s in pwswimmeets.swimming.SWIMMERS if s.team is t]
         json.dump([s.json for s in swims],open(swimmerfile,'w'))
